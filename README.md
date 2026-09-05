@@ -95,3 +95,23 @@ full convention.
 | `pnpm lint:cs`                      | `dotnet format --verify-no-changes`                     |
 | `pnpm backup:claude`                | snapshot Claude state to `/workspaces/.claude-backup-*` |
 | `dotnet test backend/VoxLib.slnx`   | run the API integration tests                           |
+
+## Creating the GitHub repository
+
+```bash
+gh repo create vox-lib --private --source=. --remote=origin --push
+bash .github/setup-branch-protection.sh   # requires PR + green CI on main
+```
+
+There is deliberately **no `LICENSE` file**. Under copyright law, code published
+with no licence is "all rights reserved": nobody may copy, modify or
+redistribute it. For a product you intend to run commercially that is the
+correct default. Add a licence only if you decide to open-source, and then
+choose deliberately: MIT (maximally permissive), Apache-2.0 (permissive plus an
+explicit patent grant), or AGPL-3.0 (copyleft that also covers running the code
+as a network service, the usual choice for stopping someone hosting your
+product as a competing SaaS).
+
+Note that a licence covers **your code only**. Audiobook files and cover art
+carry their own separate rights and are not affected by this repository's
+licence.
