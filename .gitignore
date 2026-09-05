@@ -1,0 +1,38 @@
+# ---- .NET ----
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+*.user
+*.suo
+.vs/
+artifacts/
+TestResults/
+*.received.*
+
+# ---- Node / frontend ----
+node_modules/
+dist/
+dist-ssr/
+.vite/
+*.local
+
+# ---- Secrets / local env ----
+.env
+.env.*
+!.env.example
+appsettings.Local.json
+*.pfx
+
+# ---- Editors / OS ----
+.DS_Store
+Thumbs.db
+*.swp
+
+# ---- Logs ----
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# NOTE: Claude Code state lives in a Docker volume and is snapshotted to
+# /workspaces/.claude-backup-* is outside this repo, so nothing to ignore here.

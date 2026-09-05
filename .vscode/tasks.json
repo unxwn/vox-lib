@@ -1,0 +1,35 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build-api",
+      "command": "dotnet",
+      "type": "process",
+      "args": ["build", "${workspaceFolder}/backend/VoxLib.slnx"],
+      "problemMatcher": "$msCompile",
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "watch-api",
+      "command": "dotnet",
+      "type": "process",
+      "args": ["watch", "--project", "${workspaceFolder}/backend/src/VoxLib.Api", "run", "--launch-profile", "http"],
+      "problemMatcher": "$msCompile",
+      "isBackground": true
+    },
+    {
+      "label": "dev-web",
+      "type": "shell",
+      "command": "pnpm --filter frontend dev",
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "dev (api + web)",
+      "dependsOn": ["watch-api", "dev-web"],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    }
+  ]
+}

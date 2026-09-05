@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/VoxLib.Api/VoxLib.Api.csproj" />
+  </Folder>
+</Solution>

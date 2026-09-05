@@ -1,0 +1,17 @@
+{
+  "name": "vox-lib",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue,magenta \"pnpm run api\" \"pnpm run web\"",
+    "api": "dotnet watch --project backend/src/VoxLib.Api run --launch-profile http",
+    "web": "pnpm --filter frontend dev",
+    "build": "dotnet build backend/VoxLib.slnx && pnpm --filter frontend build",
+    "lint": "pnpm --filter frontend lint",
+    "backup:claude": "bash .devcontainer/backup-claude.sh"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "packageManager": "pnpm@11.25.0"
+}

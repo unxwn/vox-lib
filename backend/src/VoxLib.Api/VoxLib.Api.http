@@ -1,0 +1,10 @@
+@host = http://localhost:5080
+
+### Health probe
+GET {{host}}/health
+
+### Sample data (the endpoint the React app calls through the Vite proxy)
+GET {{host}}/api/weatherforecast
+
+### OpenAPI document
+GET {{host}}/openapi/v1.json
