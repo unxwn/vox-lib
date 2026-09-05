@@ -28,35 +28,35 @@ The Vite dev server proxies `/api`, `/health` and `/openapi` to the API on port
 5080, so the browser only ever talks to one origin and there are no CORS
 preflights in development.
 
-| URL | What |
-| --- | --- |
-| http://localhost:5173 | React app |
-| http://localhost:5080/health | API liveness probe |
+| URL                                       | What                                |
+| ----------------------------------------- | ----------------------------------- |
+| http://localhost:5173                     | React app                           |
+| http://localhost:5080/health              | API liveness probe                  |
 | http://localhost:5080/api/weatherforecast | Sample endpoint the React app calls |
-| http://localhost:5080/openapi/v1.json | OpenAPI 3.1 document |
+| http://localhost:5080/openapi/v1.json     | OpenAPI 3.1 document                |
 
 `backend/src/VoxLib.Api/VoxLib.Api.http` has ready-made requests (REST Client extension).
 
 ## Toolchain
 
-| Tool | Version | Installed by |
-| --- | --- | --- |
-| .NET SDK | 10.0.400 | base image |
-| Node.js | 24 LTS ("Krypton") | `node` devcontainer feature |
-| pnpm | latest | `node` devcontainer feature |
+| Tool     | Version            | Installed by                |
+| -------- | ------------------ | --------------------------- |
+| .NET SDK | 10.0.400           | base image                  |
+| Node.js  | 24 LTS ("Krypton") | `node` devcontainer feature |
+| pnpm     | latest             | `node` devcontainer feature |
 
 ## Persistence across rebuilds
 
 `/home/vscode` is on **overlayfs** and is wiped whenever the container is rebuilt.
 Anything that must survive is on a named volume or on the workspace volume:
 
-| What | Where | Survives rebuild |
-| --- | --- | --- |
-| Claude Code sessions, memory, credentials | volume `vox-lib-claude` → `~/.claude` | yes |
-| Shell history | volume `vox-lib-bash-history` → `/commandhistory` | yes |
-| NuGet cache | volume `vox-lib-nuget` → `~/.nuget/packages` | yes |
-| pnpm store | `/workspaces/.pnpm-store` | yes |
-| Source code | `/workspaces/vox-lib` | yes |
+| What                                      | Where                                             | Survives rebuild |
+| ----------------------------------------- | ------------------------------------------------- | ---------------- |
+| Claude Code sessions, memory, credentials | volume `vox-lib-claude` → `~/.claude`             | yes              |
+| Shell history                             | volume `vox-lib-bash-history` → `/commandhistory` | yes              |
+| NuGet cache                               | volume `vox-lib-nuget` → `~/.nuget/packages`      | yes              |
+| pnpm store                                | `/workspaces/.pnpm-store`                         | yes              |
+| Source code                               | `/workspaces/vox-lib`                             | yes              |
 
 On top of the volume, `.devcontainer/backup-claude.sh` snapshots Claude state to
 `/workspaces/.claude-backup-<timestamp>/` every time the container starts (keeping
@@ -66,3 +66,32 @@ the last 10), so history survives even a `docker volume rm` or a
 The pnpm store is deliberately **not** a Docker volume: pnpm hardlinks packages
 from the store into `node_modules`, hardlinks cannot cross filesystems, and a
 separate volume would silently downgrade every install to full file copies.
+
+## Contributing workflow
+
+`main` is always deployable. Work on short-lived branches and open a PR:
+
+```bash
+git switch -c feature/audio-streaming
+# ... commit using Conventional Commits: feat(api): stream audio by chapter
+git push -u origin feature/audio-streaming
+gh pr create            # PR title must follow Conventional Commits; it becomes
+                        # the squashed commit message on main
+```
+
+CI (`.github/workflows/ci.yml`) must be green: backend build + tests + C#
+formatting, frontend format + lint + typecheck + build. See `CLAUDE.md` for the
+full convention.
+
+## Scripts
+
+| Command                             | What                                                    |
+| ----------------------------------- | ------------------------------------------------------- |
+| `pnpm dev`                          | API (hot reload) + Vite dev server together             |
+| `pnpm api` / `pnpm web`             | one half only                                           |
+| `pnpm build`                        | `dotnet build` + `vite build`                           |
+| `pnpm lint`                         | oxlint over the frontend                                |
+| `pnpm format` / `pnpm format:check` | Prettier                                                |
+| `pnpm lint:cs`                      | `dotnet format --verify-no-changes`                     |
+| `pnpm backup:claude`                | snapshot Claude state to `/workspaces/.claude-backup-*` |
+| `dotnet test backend/VoxLib.slnx`   | run the API integration tests                           |

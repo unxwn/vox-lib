@@ -1,24 +1,26 @@
 # https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
 version: 2
 updates:
-  - package-ecosystem: "devcontainers"
-    directory: "/"
+  - package-ecosystem: 'devcontainers'
+    directory: '/'
     schedule:
       interval: weekly
 
-  - package-ecosystem: "nuget"
-    directory: "/backend"
-    schedule:
-      interval: weekly
-    open-pull-requests-limit: 5
-
-  - package-ecosystem: "npm"
-    directory: "/frontend"
+  - package-ecosystem: 'nuget'
+    directory: '/backend'
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
 
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  # pnpm workspace: the single lockfile lives at the repo root, so Dependabot must
+  # be pointed there rather than at frontend/.
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
       interval: weekly

@@ -36,7 +36,9 @@ export default function App() {
   return (
     <main>
       <h1>vox-lib</h1>
-      <p className="subtitle">React {`•`} Vite {`•`} ASP.NET Core</p>
+      <p className="subtitle">
+        React {`•`} Vite {`•`} ASP.NET Core
+      </p>
 
       {state.status === 'loading' && <p>Loading forecast…</p>}
 
@@ -45,7 +47,9 @@ export default function App() {
           <p>
             <strong>Could not reach the API.</strong> {state.message}
           </p>
-          <p>Start the backend with <code>pnpm run api</code> from the repo root.</p>
+          <p>
+            Start the backend with <code>pnpm run api</code> from the repo root.
+          </p>
         </div>
       )}
 
