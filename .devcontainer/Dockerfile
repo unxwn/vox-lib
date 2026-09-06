@@ -31,4 +31,7 @@ RUN mkdir -p /home/vscode/.claude \
 # in ~2s with inotify.
 RUN sed -i '/DOTNET_USE_POLLING_FILE_WATCHER/d' /etc/environment
 
-USER vscode
+# NOTE: deliberately NOT ending on `USER vscode`. Dev container *features* are
+# installed in layers built on top of this image and need root to run apt. The
+# runtime user is governed by "remoteUser": "vscode" in devcontainer.json, so
+# leaving the image default here is both safer and sufficient.
