@@ -36,12 +36,17 @@ pnpm lint     # oxlint
 ## Gotchas
 
 - `/home/vscode` is **overlayfs** and is erased on container rebuild. Persistent
-  state must go on a named volume (see `.devcontainer/devcontainer.json`) or under
-  `/workspaces`. This includes `~/.config/pnpm/config.yaml`, which is why
-  `post-create.sh` re-applies the pnpm `store-dir` on every create.
-- The pnpm store is at `/workspaces/.pnpm-store`, deliberately on the same
-  filesystem as the workspace so pnpm's hardlinks work. Moving it to a separate
-  Docker volume would silently turn every install into a full copy.
+  state must go on a named volume (see `.devcontainer/devcontainer.json`) or
+  inside `/workspaces/vox-lib`. This includes `~/.config/pnpm/config.yaml`, which
+  is why `post-create.sh` re-applies the pnpm `store-dir` on every create.
+- **`/workspaces` itself is not persistent**, only `/workspaces/vox-lib` is. The
+  repo directory is a bind mount from the host; its parent is the container's
+  overlayfs and is wiped on rebuild like the rest of `/`. A path such as
+  `/workspaces/.some-cache` looks persistent and is not.
+- The pnpm store is at `/workspaces/vox-lib/.pnpm-store` (gitignored), on the
+  same filesystem as `node_modules` so pnpm's hardlinks work. A named volume
+  would be a different filesystem and would silently turn every install into a
+  full copy; so would anywhere under `/workspaces` outside the repo.
 - When killing dev servers with `pkill -f`, use a self-excluding pattern such as
   `pgrep -f 'Vox[L]ib'`; a plain `-f VoxLib.Api` also matches the shell running
   the command and kills it.
@@ -96,7 +101,7 @@ so the _PR title_ must follow Conventional Commits. Revert = one `git revert`.
 **Commits: Conventional Commits.** `type(scope): subject`, imperative mood,
 lowercase subject, no trailing period. Types: `feat` `fix` `refactor` `perf`
 `docs` `test` `build` `ci` `chore`. Scopes in use: `api`, `web`, `devcontainer`,
-`deps`. A message template is wired up via `commit.template`.
+`deps`.
 
 ## CI checks
 
@@ -116,10 +121,17 @@ dotnet test backend/VoxLib.slnx
 pnpm format:check && pnpm lint && pnpm build
 ```
 
-**Enable branch protection on `main`** in GitHub → Settings → Branches: require a
-PR, require the `backend` and `frontend` checks to pass, and require the branch
-to be up to date. Without that, the checks are advisory and nothing stops a
-direct push. This must be done in the GitHub UI; it cannot be committed.
+**Branch protection is not currently enforced.** `vox-lib` is a private repo on
+the GitHub Free plan, where both the rulesets API and the Settings → Branches UI
+refuse with `Upgrade to GitHub Pro or make this repository public`. CI still runs
+and still reports on every PR. It just cannot be made a required check, so
+nothing mechanically blocks a direct push to `main`. Until the repo goes public
+or the account goes Pro, the PR workflow above holds by discipline.
+
+If that changes, protect `main` with: require a PR, require the
+`backend (build + test)` and `frontend (lint + build)` checks (the job `name:`
+values in `ci.yml` are the status-check contexts), and require the branch to be
+up to date.
 
 ## Tests
 
