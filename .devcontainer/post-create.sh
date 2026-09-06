@@ -98,6 +98,12 @@ git config --global --add safe.directory "$REPO_ROOT" 2>/dev/null || true
 git config --global init.defaultBranch main 2>/dev/null || true
 git config --global pull.rebase true 2>/dev/null || true
 
+# The workspace is a bind mount whose files surface as mode 777 inside the
+# container, so git sees a spurious 644 -> 755 change on every tracked file.
+# Ignoring the mode bit locally keeps `git status` honest; the three scripts
+# that genuinely need +x are already recorded as 100755 in the index.
+git -C "$REPO_ROOT" config core.filemode false 2>/dev/null || true
+
 # ---------------------------------------------------------------------------
 # 6. Dependencies + local HTTPS dev certificate
 # ---------------------------------------------------------------------------
