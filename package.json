@@ -14,7 +14,7 @@
     "lint:cs": "dotnet format backend/VoxLib.slnx --verify-no-changes"
   },
   "devDependencies": {
-    "concurrently": "^9.2.1",
+    "concurrently": "^10.0.5",
     "prettier": "^3.9.6"
   },
   "packageManager": "pnpm@11.25.0"
