@@ -10,6 +10,9 @@ artifacts/
 TestResults/
 *.received.*
 
+# ---- dotnet run <file> discovery cache (created in the repo root) ----
+dotnet/runfile-discovery/
+
 # ---- Node / frontend ----
 node_modules/
 dist/
