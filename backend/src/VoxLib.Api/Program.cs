@@ -55,3 +55,7 @@ record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 }
+
+// Exposes the implicit Program class generated from top-level statements so that
+// WebApplicationFactory<Program> in the test project can boot the real app.
+public partial class Program;

@@ -1,95 +1,99 @@
 // vox-lib: ASP.NET Core Web API (.NET 10) + React/Vite frontend
 // Format reference: https://aka.ms/devcontainer.json
 {
-	"name": "vox-lib (.NET 10 + React)",
-	"image": "mcr.microsoft.com/devcontainers/dotnet:2-10.0-noble",
+  "name": "vox-lib (.NET 10 + React)",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
 
-	"features": {
-		// Node 24 "Krypton" is the current Active LTS. pnpm is installed by the
-		// feature itself so it exists before postCreateCommand runs.
-		"ghcr.io/devcontainers/features/node:1": {
-			"version": "24",
-			"pnpmVersion": "latest",
-			"installYarnUsingApt": false
-		},
-		"ghcr.io/devcontainers/features/github-cli:1": {}
-	},
+  "features": {
+    // Node 24 "Krypton" is the current Active LTS. pnpm is installed by the
+    // feature itself so it exists before postCreateCommand runs.
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "24",
+      "pnpmVersion": "latest",
+      "installYarnUsingApt": false
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
 
-	// Named volumes survive a container REBUILD; /home/vscode is on overlayfs and
-	// does not. Anything here that you would be sad to lose must be a volume.
-	"mounts": [
-		// Claude Code sessions, credentials and settings.
-		"source=vox-lib-claude,target=/home/vscode/.claude,type=volume",
-		// Shell history (HISTFILE is repointed here via remoteEnv).
-		"source=vox-lib-bash-history,target=/commandhistory,type=volume",
-		// NuGet package cache. Avoids re-downloading the world on every rebuild.
-		"source=vox-lib-nuget,target=/home/vscode/.nuget/packages,type=volume"
-		// NOTE: the pnpm store is deliberately NOT a volume. pnpm hardlinks from
-		// its store into node_modules, and hardlinks cannot cross filesystems, so
-		// the store must live on the same filesystem as the workspace. It is set
-		// to /workspaces/.pnpm-store in post-create.sh (persistent, same volume).
-	],
+  // Named volumes survive a container REBUILD; /home/vscode is on overlayfs and
+  // does not. Anything here that you would be sad to lose must be a volume.
+  "mounts": [
+    // Claude Code sessions, credentials and settings.
+    "source=vox-lib-claude,target=/home/vscode/.claude,type=volume",
+    // Shell history (HISTFILE is repointed here via remoteEnv).
+    "source=vox-lib-bash-history,target=/commandhistory,type=volume",
+    // NuGet package cache. Avoids re-downloading the world on every rebuild.
+    "source=vox-lib-nuget,target=/home/vscode/.nuget/packages,type=volume"
+    // NOTE: the pnpm store is deliberately NOT a volume. pnpm hardlinks from
+    // its store into node_modules, and hardlinks cannot cross filesystems, so
+    // the store must live on the same filesystem as the workspace. It is set
+    // to /workspaces/.pnpm-store in post-create.sh (persistent, same volume).
+  ],
 
-	"remoteEnv": {
-		"HISTFILE": "/commandhistory/.bash_history",
-		"PNPM_HOME": "/home/vscode/.local/share/pnpm",
-		"PATH": "/home/vscode/.local/share/pnpm:${containerEnv:PATH}",
-		"DOTNET_CLI_TELEMETRY_OPTOUT": "1",
-		"DOTNET_NOLOGO": "1",
-		"ASPNETCORE_ENVIRONMENT": "Development"
-	},
+  "remoteEnv": {
+    "HISTFILE": "/commandhistory/.bash_history",
+    "PNPM_HOME": "/home/vscode/.local/share/pnpm",
+    "PATH": "/home/vscode/.local/share/pnpm:${containerEnv:PATH}",
+    "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
+    "DOTNET_NOLOGO": "1",
+    // inotify works on this ext4 workspace volume; polling only adds latency.
+    "DOTNET_USE_POLLING_FILE_WATCHER": "false",
+    "ASPNETCORE_ENVIRONMENT": "Development"
+  },
 
-	"forwardPorts": [5080, 5443, 5173],
-	"portsAttributes": {
-		"5080": { "label": "API (http)", "onAutoForward": "silent" },
-		"5443": { "label": "API (https)", "protocol": "https", "onAutoForward": "silent" },
-		"5173": { "label": "Web (vite)", "onAutoForward": "notify" }
-	},
+  "forwardPorts": [5080, 5443, 5173],
+  "portsAttributes": {
+    "5080": { "label": "API (http)", "onAutoForward": "silent" },
+    "5443": { "label": "API (https)", "protocol": "https", "onAutoForward": "silent" },
+    "5173": { "label": "Web (vite)", "onAutoForward": "notify" }
+  },
 
-	"postCreateCommand": "bash .devcontainer/post-create.sh",
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
 
-	// Snapshot Claude state to the workspace volume on every container start.
-	"postStartCommand": "bash .devcontainer/backup-claude.sh",
+  // Snapshot Claude state to the workspace volume on every container start.
+  "postStartCommand": "bash .devcontainer/backup-claude.sh",
 
-	"customizations": {
-		"vscode": {
-			"extensions": [
-				"anthropic.claude-code",
-				"ms-dotnettools.csdevkit",
-				"ms-dotnettools.csharp",
-				"oxc.oxc-vscode",
-				"esbenp.prettier-vscode",
-				"editorconfig.editorconfig",
-				"usernamehw.errorlens",
-				"eamodio.gitlens",
-				"humao.rest-client"
-			],
-			"settings": {
-				"editor.formatOnSave": true,
-				"files.trimTrailingWhitespace": true,
-				"files.insertFinalNewline": true,
-				"[csharp]": { "editor.defaultFormatter": "ms-dotnettools.csharp" },
-				"[typescript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
-				"[typescriptreact]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
-				"[json]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
-				"[jsonc]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
-				"dotnet.defaultSolution": "backend/VoxLib.slnx",
-				"files.exclude": {
-					"**/bin": true,
-					"**/obj": true
-				},
-				"search.exclude": {
-					"**/node_modules": true,
-					"**/bin": true,
-					"**/obj": true,
-					"**/pnpm-lock.yaml": true
-				},
-				"npm.packageManager": "pnpm",
-				"typescript.tsdk": "frontend/node_modules/typescript/lib",
-				"terminal.integrated.defaultProfile.linux": "bash"
-			}
-		}
-	},
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "anthropic.claude-code",
+        "ms-dotnettools.csdevkit",
+        "ms-dotnettools.csharp",
+        "oxc.oxc-vscode",
+        "esbenp.prettier-vscode",
+        "editorconfig.editorconfig",
+        "usernamehw.errorlens",
+        "eamodio.gitlens",
+        "humao.rest-client"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "files.trimTrailingWhitespace": true,
+        "files.insertFinalNewline": true,
+        "[csharp]": { "editor.defaultFormatter": "ms-dotnettools.csharp" },
+        "[typescript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+        "[typescriptreact]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+        "[json]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+        "[jsonc]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+        "dotnet.defaultSolution": "backend/VoxLib.slnx",
+        "files.exclude": {
+          "**/bin": true,
+          "**/obj": true
+        },
+        "search.exclude": {
+          "**/node_modules": true,
+          "**/bin": true,
+          "**/obj": true,
+          "**/pnpm-lock.yaml": true
+        },
+        "npm.packageManager": "pnpm",
+        "typescript.tsdk": "frontend/node_modules/typescript/lib",
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
 
-	"remoteUser": "vscode"
+  "remoteUser": "vscode"
 }

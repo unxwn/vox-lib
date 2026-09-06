@@ -2,4 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/VoxLib.Api/VoxLib.Api.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/VoxLib.Api.Tests/VoxLib.Api.Tests.csproj" />
+  </Folder>
 </Solution>

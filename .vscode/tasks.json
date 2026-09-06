@@ -13,7 +13,14 @@
       "label": "watch-api",
       "command": "dotnet",
       "type": "process",
-      "args": ["watch", "--project", "${workspaceFolder}/backend/src/VoxLib.Api", "run", "--launch-profile", "http"],
+      "args": [
+        "watch",
+        "--project",
+        "${workspaceFolder}/backend/src/VoxLib.Api",
+        "run",
+        "--launch-profile",
+        "http"
+      ],
       "problemMatcher": "$msCompile",
       "isBackground": true
     },

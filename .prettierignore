@@ -1,0 +1,7 @@
+node_modules
+dist
+pnpm-lock.yaml
+# .NET owns its own formatting via .editorconfig + dotnet format
+backend
+**/bin
+**/obj

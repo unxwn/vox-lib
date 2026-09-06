@@ -8,10 +8,14 @@
     "web": "pnpm --filter frontend dev",
     "build": "dotnet build backend/VoxLib.slnx && pnpm --filter frontend build",
     "lint": "pnpm --filter frontend lint",
-    "backup:claude": "bash .devcontainer/backup-claude.sh"
+    "backup:claude": "bash .devcontainer/backup-claude.sh",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint:cs": "dotnet format backend/VoxLib.slnx --verify-no-changes"
   },
   "devDependencies": {
-    "concurrently": "^9.2.1"
+    "concurrently": "^9.2.1",
+    "prettier": "^3.9.6"
   },
   "packageManager": "pnpm@11.25.0"
 }
