@@ -48,20 +48,22 @@ preflights in development.
 ## Persistence across rebuilds
 
 `/home/vscode` is on **overlayfs** and is wiped whenever the container is rebuilt.
-Anything that must survive is on a named volume or on the workspace volume:
+So is `/workspaces` itself: only `/workspaces/vox-lib`, the bind mount of the repo
+from the host, persists. Anything that must survive is on a named volume or inside
+the repo directory:
 
 | What                                      | Where                                             | Survives rebuild |
 | ----------------------------------------- | ------------------------------------------------- | ---------------- |
-| Claude Code sessions, memory, credentials | volume `vox-lib-claude` → `~/.claude`             | yes              |
+| Claude Code sessions, memory, `CLAUDE.md` | volume `vox-lib-claude` → `~/.claude`             | yes              |
 | Shell history                             | volume `vox-lib-bash-history` → `/commandhistory` | yes              |
 | NuGet cache                               | volume `vox-lib-nuget` → `~/.nuget/packages`      | yes              |
-| pnpm store                                | `/workspaces/.pnpm-store`                         | yes              |
+| pnpm store                                | `/workspaces/vox-lib/.pnpm-store`                 | yes              |
 | Source code                               | `/workspaces/vox-lib`                             | yes              |
 
-On top of the volume, `.devcontainer/backup-claude.sh` snapshots Claude state to
-`/workspaces/.claude-backup-<timestamp>/` every time the container starts (keeping
-the last 10), so history survives even a `docker volume rm` or a
-"Clean Up Dev Containers" sweep. Run it manually any time with `pnpm backup:claude`.
+A rebuild keeps the named volumes; removing them does not. `docker volume rm`,
+a `docker volume prune` once the container is gone, or a Docker Desktop reset
+takes Claude Code's history and credentials with it. Only the repo directory is
+on the host disk.
 
 The pnpm store is deliberately **not** a Docker volume: pnpm hardlinks packages
 from the store into `node_modules`, hardlinks cannot cross filesystems, and a
@@ -75,7 +77,7 @@ separate volume would silently downgrade every install to full file copies.
 git switch -c feature/audio-streaming
 # ... commit using Conventional Commits: feat(api): stream audio by chapter
 git push -u origin feature/audio-streaming
-gh pr create            # PR title must follow Conventional Commits; it becomes
+gh pr create            # PR title must follow Conventional Commits. It becomes
                         # the squashed commit message on main
 ```
 
@@ -85,33 +87,29 @@ full convention.
 
 ## Scripts
 
-| Command                             | What                                                    |
-| ----------------------------------- | ------------------------------------------------------- |
-| `pnpm dev`                          | API (hot reload) + Vite dev server together             |
-| `pnpm api` / `pnpm web`             | one half only                                           |
-| `pnpm build`                        | `dotnet build` + `vite build`                           |
-| `pnpm lint`                         | oxlint over the frontend                                |
-| `pnpm format` / `pnpm format:check` | Prettier                                                |
-| `pnpm lint:cs`                      | `dotnet format --verify-no-changes`                     |
-| `pnpm backup:claude`                | snapshot Claude state to `/workspaces/.claude-backup-*` |
-| `dotnet test backend/VoxLib.slnx`   | run the API integration tests                           |
+| Command                             | What                                        |
+| ----------------------------------- | ------------------------------------------- |
+| `pnpm dev`                          | API (hot reload) + Vite dev server together |
+| `pnpm api` / `pnpm web`             | one half only                               |
+| `pnpm build`                        | `dotnet build` + `vite build`               |
+| `pnpm lint`                         | oxlint over the frontend                    |
+| `pnpm format` / `pnpm format:check` | Prettier                                    |
+| `pnpm lint:cs`                      | `dotnet format --verify-no-changes`         |
+| `dotnet test backend/VoxLib.slnx`   | run the API integration tests               |
 
-## Creating the GitHub repository
+## Repository
 
-```bash
-gh repo create vox-lib --private --source=. --remote=origin --push
-bash .github/setup-branch-protection.sh   # requires PR + green CI on main
-```
+The remote is `github.com/unxwn/vox-lib` (private). Branch protection is **not**
+enforced: on the GitHub Free plan a private repo cannot have required status
+checks. The API and the Settings UI both answer `Upgrade to GitHub Pro or make
+this repository public`. CI still runs on every PR and reports its result; it
+simply is not a merge gate. The PR workflow above therefore holds by convention,
+not by enforcement.
 
-There is deliberately **no `LICENSE` file**. Under copyright law, code published
-with no licence is "all rights reserved": nobody may copy, modify or
-redistribute it. For a product you intend to run commercially that is the
-correct default. Add a licence only if you decide to open-source, and then
-choose deliberately: MIT (maximally permissive), Apache-2.0 (permissive plus an
-explicit patent grant), or AGPL-3.0 (copyleft that also covers running the code
-as a network service, the usual choice for stopping someone hosting your
-product as a competing SaaS).
+## Licence
 
-Note that a licence covers **your code only**. Audiobook files and cover art
-carry their own separate rights and are not affected by this repository's
-licence.
+Unlicensed and proprietary, all rights reserved. No `LICENSE` file is present by
+intent, not omission.
+
+Any licence added later would cover this source only. Audiobook files and cover
+art carry their own separate rights.

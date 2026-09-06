@@ -1,0 +1,20 @@
+# Normalize all text files to LF in the repository and on checkout.
+* text=auto eol=lf
+
+# Binary files: never touch.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.pdf binary
+*.mp3 binary
+*.m4a binary
+*.m4b binary
+*.flac binary
+*.opus binary
+
+# Generated. Collapse in diffs and exclude from language stats.
+pnpm-lock.yaml linguist-generated=true -diff

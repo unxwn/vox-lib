@@ -8,7 +8,6 @@
     "web": "pnpm --filter frontend dev",
     "build": "dotnet build backend/VoxLib.slnx && pnpm --filter frontend build",
     "lint": "pnpm --filter frontend lint",
-    "backup:claude": "bash .devcontainer/backup-claude.sh",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint:cs": "dotnet format backend/VoxLib.slnx --verify-no-changes"

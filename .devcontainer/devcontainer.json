@@ -28,8 +28,8 @@
     "source=vox-lib-nuget,target=/home/vscode/.nuget/packages,type=volume"
     // NOTE: the pnpm store is deliberately NOT a volume. pnpm hardlinks from
     // its store into node_modules, and hardlinks cannot cross filesystems, so
-    // the store must live on the same filesystem as the workspace. It is set
-    // to /workspaces/.pnpm-store in post-create.sh (persistent, same volume).
+    // the store must live on the same filesystem as node_modules. It is set to
+    // <repo>/.pnpm-store in post-create.sh, inside the workspace bind mount.
   ],
 
   "remoteEnv": {
@@ -51,9 +51,6 @@
   },
 
   "postCreateCommand": "bash .devcontainer/post-create.sh",
-
-  // Snapshot Claude state to the workspace volume on every container start.
-  "postStartCommand": "bash .devcontainer/backup-claude.sh",
 
   "customizations": {
     "vscode": {

@@ -1,41 +1,45 @@
-# ---- .NET ----
+# Build results
 bin/
 obj/
 [Dd]ebug/
 [Rr]elease/
-*.user
-*.suo
-.vs/
 artifacts/
+dist/
+dist-ssr/
+
+# Test results
 TestResults/
 *.received.*
 
-# ---- dotnet run <file> discovery cache (created in the repo root) ----
+# Dependencies
+node_modules/
+
+# Caches
+.vite/
 dotnet/runfile-discovery/
 
-# ---- Node / frontend ----
-node_modules/
-dist/
-dist-ssr/
-.vite/
-*.local
+# Visual Studio / Rider
+.vs/
+*.user
+*.suo
 
-# ---- Secrets / local env ----
+# Secrets and local configuration
 .env
 .env.*
 !.env.example
 appsettings.Local.json
+*.local
 *.pfx
 
-# ---- Editors / OS ----
-.DS_Store
-Thumbs.db
-*.swp
-
-# ---- Logs ----
+# Logs
 *.log
 npm-debug.log*
 pnpm-debug.log*
 
-# NOTE: Claude Code state lives in a Docker volume and is snapshotted to
-# /workspaces/.claude-backup-* is outside this repo, so nothing to ignore here.
+# OS and editor files
+.DS_Store
+Thumbs.db
+*.swp
+
+# pnpm store (kept on the workspace mount so pnpm can hardlink into node_modules)
+.pnpm-store/

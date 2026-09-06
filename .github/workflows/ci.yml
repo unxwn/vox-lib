@@ -23,7 +23,7 @@ jobs:
 
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          global-json-file: global.json
 
       - name: Cache NuGet
         uses: actions/cache@v4
@@ -76,8 +76,8 @@ jobs:
       - name: Lint
         run: pnpm lint
 
-      - name: Typecheck
-        run: pnpm --filter frontend exec tsc -b --noEmit
-
-      - name: Build
+      # Runs tsc -b, then vite build. The bundle is discarded; the point is that
+      # both steps succeed. vite build catches what tsc cannot: imports that do
+      # not resolve at bundle time, missing referenced assets, plugin failures.
+      - name: Typecheck and build
         run: pnpm --filter frontend build

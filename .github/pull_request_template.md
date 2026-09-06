@@ -1,20 +1,25 @@
-## What
+## Summary
 
-<!-- What does this change do, in one or two sentences? -->
+<!-- One paragraph: what this PR does and why. -->
 
-## Why
+## Changes
 
-<!-- The problem being solved. Link the issue: Closes #123 -->
+<!-- Group by concern, not by commit. Bold labels where it helps a reviewer
+     prioritise: **Architecture:** / **Bug N:** / **Conventions:** -->
 
-## How
+## Out of scope
 
-<!-- Anything a reviewer needs to know to read the diff: approach, tradeoffs,
-     anything deliberately left out. -->
+<!-- Anything considered and deliberately left out. Link follow-up issues. -->
 
-## Checklist
+## Test plan
 
-- [ ] Branch name follows `feature/…`, `fix/…`, `chore/…`
-- [ ] Commits follow Conventional Commits (`feat:`, `fix:`, `refactor:`, …)
-- [ ] `pnpm build` and `dotnet test backend/VoxLib.slnx` pass locally
+- [ ] `dotnet format backend/VoxLib.slnx --verify-no-changes`
+- [ ] `dotnet test backend/VoxLib.slnx`
+- [ ] `pnpm format:check && pnpm lint && pnpm build`
 - [ ] Tests added or updated for behaviour changes
-- [ ] No secrets, tokens or `.env` files in the diff
+
+<!-- Add manual steps for anything the automated checks do not cover. -->
+
+## Dependencies
+
+<!-- PRs this depends on, or that depend on this. Delete if none. -->
