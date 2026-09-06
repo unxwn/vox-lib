@@ -9,7 +9,7 @@
   "features": {
     // Node 24 "Krypton" is the current Active LTS. pnpm is installed by the
     // feature itself so it exists before postCreateCommand runs.
-    "ghcr.io/devcontainers/features/node:1": {
+    "ghcr.io/devcontainers/features/node:2": {
       "version": "24",
       "pnpmVersion": "latest",
       "installYarnUsingApt": false
