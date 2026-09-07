@@ -19,6 +19,15 @@ for d in "$HOME/.claude" /commandhistory "$HOME/.nuget/packages"; do
 done
 chmod 700 "$HOME/.claude" 2>/dev/null || true
 
+# The VS Code extension runs its own bundled binary by absolute path and never
+# puts `claude` on PATH, so the terminal needs the standalone CLI. It installs
+# into ~/.local/bin, which is overlayfs and therefore gone after a rebuild.
+# Both read the ~/.claude volume above, so one login covers extension and CLI.
+if ! command -v claude >/dev/null 2>&1; then
+  log "Installing Claude Code CLI..."
+  curl -fsSL https://claude.ai/install.sh | bash || warn "claude CLI install failed"
+fi
+
 # Persistent shell history.
 touch /commandhistory/.bash_history 2>/dev/null || true
 if ! grep -q 'commandhistory' "$HOME/.bashrc" 2>/dev/null; then
