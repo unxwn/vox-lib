@@ -99,12 +99,10 @@ full convention.
 
 ## Repository
 
-The remote is `github.com/unxwn/vox-lib` (private). Branch protection is **not**
-enforced: on the GitHub Free plan a private repo cannot have required status
-checks. The API and the Settings UI both answer `Upgrade to GitHub Pro or make
-this repository public`. CI still runs on every PR and reports its result; it
-simply is not a merge gate. The PR workflow above therefore holds by convention,
-not by enforcement.
+The remote is `github.com/unxwn/vox-lib` (public). Branch protection is enforced
+by the `protect main` ruleset: a pull request is required, both CI checks must
+pass, the branch must be up to date with `main` before it can merge, and
+force-push and deletion are blocked. CI is a merge gate, not a report.
 
 ## Licence
 

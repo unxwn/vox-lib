@@ -108,10 +108,10 @@ lowercase subject, no trailing period. Types: `feat` `fix` `refactor` `perf`
 `.github/workflows/ci.yml` runs on every PR into `main` and must be green to
 merge. Two parallel jobs:
 
-| Job        | Steps                                                                                    |
-| ---------- | ---------------------------------------------------------------------------------------- |
-| `backend`  | restore → `dotnet format --verify-no-changes` → build (Release) → `dotnet test`          |
-| `frontend` | `pnpm install --frozen-lockfile` → `format:check` → `lint` → `tsc -b --noEmit` → `build` |
+| Job        | Steps                                                                                             |
+| ---------- | ------------------------------------------------------------------------------------------------- |
+| `backend`  | restore → `dotnet format --verify-no-changes` → build (Release) → `dotnet test`                   |
+| `frontend` | `pnpm install --frozen-lockfile` → `format:check` → `lint` → `build` (`tsc -b` then `vite build`) |
 
 Run the same checks locally before pushing:
 
@@ -121,17 +121,24 @@ dotnet test backend/VoxLib.slnx
 pnpm format:check && pnpm lint && pnpm build
 ```
 
-**Branch protection is not currently enforced.** `vox-lib` is a private repo on
-the GitHub Free plan, where both the rulesets API and the Settings → Branches UI
-refuse with `Upgrade to GitHub Pro or make this repository public`. CI still runs
-and still reports on every PR. It just cannot be made a required check, so
-nothing mechanically blocks a direct push to `main`. Until the repo goes public
-or the account goes Pro, the PR workflow above holds by discipline.
+**Branch protection is enforced.** The repository is public, and `main` carries a
+`protect main` ruleset that requires a pull request, requires the
+`backend (build + test)` and `frontend (lint + build)` checks to pass, requires
+the branch to be up to date with `main` before merging, and blocks force-push and
+deletion.
 
-If that changes, protect `main` with: require a PR, require the
-`backend (build + test)` and `frontend (lint + build)` checks (the job `name:`
-values in `ci.yml` are the status-check contexts), and require the branch to be
-up to date.
+The job `name:` values in `ci.yml` are what GitHub matches as status-check
+contexts. Renaming a job silently stops satisfying the rule, so the ruleset has to
+be updated in the same change.
+
+`required_approving_review_count` is 0 by design. GitHub does not allow approving
+your own pull request, so requiring a review on a solo project would make every PR
+permanently unmergeable.
+
+Requiring the branch to be up to date has a cost worth knowing: every merge into
+`main` invalidates every other open PR, which then needs a rebase and a fresh CI
+run. With several dependency PRs open at once, group them into one rather than
+merging them one at a time.
 
 ## Tests
 
