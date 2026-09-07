@@ -1,16 +1,49 @@
 # https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+#
+# Every ecosystem is grouped the same way:
+#   security   one PR per ecosystem, whatever the advisory, because a fix should
+#              not wait behind unrelated version bumps
+#   routine    one PR per ecosystem for minor and patch, which are the updates
+#              that are safe to take as a batch
+#
+# Majors are deliberately left ungrouped so each one arrives as its own PR and
+# gets read on its own. They are the updates allowed to break the build.
+#
+# commit-message prefixes are set explicitly because the PR title becomes the
+# squashed commit on main, and main requires Conventional Commits. Without
+# them the nuget ecosystem titles its PRs "Bump X from A to B".
 version: 2
 updates:
   - package-ecosystem: 'devcontainers'
     directory: '/'
     schedule:
       interval: weekly
+    commit-message:
+      prefix: 'chore(deps)'
+    groups:
+      devcontainers-security:
+        applies-to: security-updates
+        patterns: ['*']
+      devcontainers:
+        applies-to: version-updates
+        patterns: ['*']
+        update-types: ['minor', 'patch']
 
   - package-ecosystem: 'nuget'
     directory: '/backend'
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'build(deps)'
+    groups:
+      nuget-security:
+        applies-to: security-updates
+        patterns: ['*']
+      nuget:
+        applies-to: version-updates
+        patterns: ['*']
+        update-types: ['minor', 'patch']
 
   # pnpm workspace: the single lockfile lives at the repo root, so Dependabot must
   # be pointed there rather than at frontend/.
@@ -19,8 +52,29 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'build(deps)'
+      prefix-development: 'build(deps-dev)'
+    groups:
+      npm-security:
+        applies-to: security-updates
+        patterns: ['*']
+      npm:
+        applies-to: version-updates
+        patterns: ['*']
+        update-types: ['minor', 'patch']
 
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
       interval: weekly
+    commit-message:
+      prefix: 'build(deps)'
+    groups:
+      github-actions-security:
+        applies-to: security-updates
+        patterns: ['*']
+      github-actions:
+        applies-to: version-updates
+        patterns: ['*']
+        update-types: ['minor', 'patch']
