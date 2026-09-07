@@ -50,6 +50,23 @@ pnpm lint     # oxlint
 - When killing dev servers with `pkill -f`, use a self-excluding pattern such as
   `pgrep -f 'Vox[L]ib'`; a plain `-f VoxLib.Api` also matches the shell running
   the command and kills it.
+- `pnpm install` aborts with `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY` when it
+  decides to purge `node_modules` and has no TTY to ask. Prefix with `CI=true`.
+  Add `--no-frozen-lockfile` when a manifest changed, because `CI=true` also makes
+  frozen-lockfile the default and the install then fails a second time.
+- Prettier owns `CLAUDE.md` and `README.md`, table alignment included. Editing one
+  cell widens the column and `pnpm format:check` fails until
+  `pnpm exec prettier --write <file>` re-pads the whole table.
+- Nothing in CI builds the dev container, so a `devcontainers` dependency bump is
+  unverified by a green PR. Compare the feature's options across versions without
+  a rebuild:
+
+  ```bash
+  TOKEN=$(curl -s "https://ghcr.io/token?scope=repository:devcontainers/features/node:pull&service=ghcr.io" | jq -r .token)
+  curl -s -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.oci.image.manifest.v1+json" \
+    https://ghcr.io/v2/devcontainers/features/node/manifests/2.1.0 \
+    | jq -r '.annotations["dev.containers.metadata"]' | jq .options
+  ```
 
 ## What this project is
 
@@ -91,6 +108,11 @@ branch, so history stays linear.
 PR is where CI runs and where the change becomes reviewable later; a commit
 pushed straight to `main` skips both. `.github/pull_request_template.md` is
 filled in automatically.
+
+Fill in the sections that `.github/pull_request_template.md` actually has, and read
+it rather than copying an older PR. They have already changed once, from
+What / Why / How / Checklist to Summary / Changes / Out of scope / Test plan /
+Dependencies.
 
 **Merge by squashing.** A squash merge collapses every commit on the branch into
 a single commit on `main`. It means you can commit as messily as you like while
