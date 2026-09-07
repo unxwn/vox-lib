@@ -29,10 +29,8 @@ dotnet/runfile-discovery/
 !.env.example
 appsettings.Local.json
 *.local
+*.local.json
 *.pfx
-
-# Claude Code: settings.json is shared, the local override is personal
-.claude/settings.local.json
 
 # Logs
 *.log
