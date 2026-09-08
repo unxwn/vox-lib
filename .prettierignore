@@ -5,3 +5,10 @@ pnpm-lock.yaml
 backend
 **/bin
 **/obj
+
+# spec-kit. Vendor-managed (refreshed by `specify self upgrade`) and generated
+# spec artifacts that the speckit scripts parse; reformatting both only creates
+# diff noise.
+.specify
+.claude/skills
+specs
