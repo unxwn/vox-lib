@@ -55,10 +55,17 @@ the repo directory:
 | What                                      | Where                                             | Survives rebuild |
 | ----------------------------------------- | ------------------------------------------------- | ---------------- |
 | Claude Code sessions, memory, `CLAUDE.md` | volume `vox-lib-claude` → `~/.claude`             | yes              |
+| GitHub CLI auth                           | volume `vox-lib-gh` → `~/.config/gh`              | yes              |
 | Shell history                             | volume `vox-lib-bash-history` → `/commandhistory` | yes              |
 | NuGet cache                               | volume `vox-lib-nuget` → `~/.nuget/packages`      | yes              |
 | pnpm store                                | `/workspaces/vox-lib/.pnpm-store`                 | yes              |
 | Source code                               | `/workspaces/vox-lib`                             | yes              |
+
+Two of these need more than a mount. Claude Code keeps per-project state in
+`~/.claude.json`, a sibling of `~/.claude` rather than a file inside it, so
+`CLAUDE_CONFIG_DIR` points the config directory at the volume to pull it in. The
+GitHub CLI writes its token to `~/.config/gh`, which is why that path is a volume
+of its own rather than part of the home directory.
 
 A rebuild keeps the named volumes; removing them does not. `docker volume rm`,
 a `docker volume prune` once the container is gone, or a Docker Desktop reset

@@ -20,8 +20,13 @@
   // Named volumes survive a container REBUILD; /home/vscode is on overlayfs and
   // does not. Anything here that you would be sad to lose must be a volume.
   "mounts": [
-    // Claude Code sessions, credentials and settings.
+    // Claude Code sessions, credentials and settings. CLAUDE_CONFIG_DIR below
+    // pulls ~/.claude.json in here too; by default it sits outside this mount.
     "source=vox-lib-claude,target=/home/vscode/.claude,type=volume",
+    // GitHub CLI auth. The feature installs gh, but its token lands in
+    // ~/.config/gh, which is overlayfs, so `gh auth login` would be needed
+    // again after every rebuild.
+    "source=vox-lib-gh,target=/home/vscode/.config/gh,type=volume",
     // Shell history (HISTFILE is repointed here via remoteEnv).
     "source=vox-lib-bash-history,target=/commandhistory,type=volume",
     // NuGet package cache. Avoids re-downloading the world on every rebuild.
@@ -34,6 +39,11 @@
 
   "remoteEnv": {
     "HISTFILE": "/commandhistory/.bash_history",
+    // Claude Code keeps per-project state (trust, onboarding, MCP servers) in
+    // ~/.claude.json, a sibling of ~/.claude rather than a file inside it, so
+    // the volume above does not cover it. Pointing the config dir at the volume
+    // puts both on persistent storage.
+    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude",
     "PNPM_HOME": "/home/vscode/.local/share/pnpm",
     "PATH": "/home/vscode/.local/share/pnpm:${containerEnv:PATH}",
     "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
