@@ -27,13 +27,30 @@ if [ -f "$HOME/.claude.json" ] && [ ! -f "$HOME/.claude/.claude.json" ]; then
   log "Migrated ~/.claude.json onto the .claude volume"
 fi
 
+# Everything below installs into ~/.local/bin, which is overlayfs and therefore
+# empty again after a rebuild. Put it on PATH first so the `command -v` guards
+# see what a previous run left behind and skip the reinstall.
+export PATH="$HOME/.local/bin:$PATH"
+
 # The VS Code extension runs its own bundled binary by absolute path and never
-# puts `claude` on PATH, so the terminal needs the standalone CLI. It installs
-# into ~/.local/bin, which is overlayfs and therefore gone after a rebuild.
+# puts `claude` on PATH, so the terminal needs the standalone CLI.
 # Both read the ~/.claude volume above, so one login covers extension and CLI.
 if ! command -v claude >/dev/null 2>&1; then
   log "Installing Claude Code CLI..."
   curl -fsSL https://claude.ai/install.sh | bash || warn "claude CLI install failed"
+fi
+
+# spec-kit is a Python CLI, and uv is how it is installed without bringing a
+# Python toolchain into a repo that has none. Roughly 6s combined, so it is not
+# worth persisting either of them on a volume.
+if ! command -v uv >/dev/null 2>&1; then
+  log "Installing uv..."
+  curl -LsSf https://astral.sh/uv/install.sh | sh || warn "uv install failed"
+fi
+if ! command -v specify >/dev/null 2>&1; then
+  log "Installing spec-kit CLI..."
+  "$HOME/.local/bin/uv" tool install specify-cli \
+    --from git+https://github.com/github/spec-kit.git@v1.0.4 || warn "specify install failed"
 fi
 
 # Persistent shell history.
