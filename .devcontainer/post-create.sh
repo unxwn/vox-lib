@@ -11,13 +11,21 @@ USER_NAME="$(id -un)"
 
 # Docker creates a fresh named volume root-owned; the container user needs it.
 log "Fixing volume ownership..."
-for d in "$HOME/.claude" /commandhistory "$HOME/.nuget/packages"; do
+for d in "$HOME/.claude" "$HOME/.config/gh" /commandhistory "$HOME/.nuget/packages"; do
   if [ -d "$d" ] && [ "$(stat -c '%U' "$d")" != "$USER_NAME" ]; then
     sudo chown -R "$USER_NAME:$USER_NAME" "$d"
     log "  chowned $d"
   fi
 done
-chmod 700 "$HOME/.claude" 2>/dev/null || true
+chmod 700 "$HOME/.claude" "$HOME/.config/gh" 2>/dev/null || true
+
+# CLAUDE_CONFIG_DIR (set in devcontainer.json) moves ~/.claude.json onto the
+# volume. Carry an existing file over the first time, so per-project state is
+# not silently reset. Only ever runs when the old file outlived the new one.
+if [ -f "$HOME/.claude.json" ] && [ ! -f "$HOME/.claude/.claude.json" ]; then
+  mv "$HOME/.claude.json" "$HOME/.claude/.claude.json"
+  log "Migrated ~/.claude.json onto the .claude volume"
+fi
 
 # The VS Code extension runs its own bundled binary by absolute path and never
 # puts `claude` on PATH, so the terminal needs the standalone CLI. It installs

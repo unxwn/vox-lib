@@ -15,14 +15,16 @@ FROM mcr.microsoft.com/devcontainers/dotnet:2-10.0-noble
 # directory is unwritable. post-create.sh still repairs ownership defensively.
 USER root
 RUN mkdir -p /home/vscode/.claude \
+             /home/vscode/.config/gh \
              /home/vscode/.nuget/packages \
              /home/vscode/.local/share/pnpm \
              /commandhistory \
  && chown -R vscode:vscode /home/vscode/.claude \
+                           /home/vscode/.config \
                            /home/vscode/.nuget \
                            /home/vscode/.local \
                            /commandhistory \
- && chmod 700 /home/vscode/.claude
+ && chmod 700 /home/vscode/.claude /home/vscode/.config/gh
 
 # The .NET base image forces polling file watchers, a safe default for bind
 # mounts from Windows/macOS where inotify events do not propagate. This
