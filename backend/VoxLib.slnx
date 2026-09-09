@@ -1,6 +1,9 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/VoxLib.Api/VoxLib.Api.csproj" />
+    <Project Path="src/VoxLib.Dal/VoxLib.Dal.csproj" />
+    <Project Path="src/VoxLib.Model/VoxLib.Model.csproj" />
+    <Project Path="src/VoxLib.Orchestrator/VoxLib.Orchestrator.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/VoxLib.Api.Tests/VoxLib.Api.Tests.csproj" />

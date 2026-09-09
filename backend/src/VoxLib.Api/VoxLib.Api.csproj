@@ -10,4 +10,10 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.11" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\VoxLib.Model\VoxLib.Model.csproj" />
+    <ProjectReference Include="..\VoxLib.Orchestrator\VoxLib.Orchestrator.csproj" />
+    <ProjectReference Include="..\VoxLib.Dal\VoxLib.Dal.csproj" />
+  </ItemGroup>
+
 </Project>

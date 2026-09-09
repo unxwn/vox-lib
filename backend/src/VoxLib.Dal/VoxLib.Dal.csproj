@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <!-- Npgsql 10.0.3 asks for EF Core 10.0.4 and the design package for 10.0.12.
+         The design package is a private asset, so without naming EF Core here
+         the projects downstream resolve 10.0.4 against a VoxLib.Dal built on
+         10.0.12, which is an assembly unification warning on every build. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.12" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VoxLib.Model\VoxLib.Model.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Embedded rather than copied to the output directory, so the seeder finds
+         it identically from the API, the tests and the design-time tooling,
+         whatever the working directory happens to be. -->
+    <EmbeddedResource Include="Seed\books.json" />
+  </ItemGroup>
+
+</Project>

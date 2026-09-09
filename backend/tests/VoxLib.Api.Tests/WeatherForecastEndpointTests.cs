@@ -1,13 +1,13 @@
 using System.Net;
 using System.Net.Http.Json;
-using Microsoft.AspNetCore.Mvc.Testing;
+using VoxLib.Api.Tests.Infrastructure;
 
 namespace VoxLib.Api.Tests;
 
-public class WeatherForecastEndpointTests(WebApplicationFactory<Program> factory)
-    : IClassFixture<WebApplicationFactory<Program>>
+[Collection(CatalogueCollection.Name)]
+public class WeatherForecastEndpointTests(CatalogueApiFixture fixture)
 {
-    private readonly HttpClient _client = factory.CreateClient();
+    private readonly HttpClient _client = fixture.CreateClient();
 
     [Fact]
     public async Task Returns_five_forecasts()

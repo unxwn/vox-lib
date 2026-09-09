@@ -1,0 +1,364 @@
+[
+  {
+    "slug": "kobzar-selected-poems",
+    "title": "Kobzar: Selected Poems",
+    "description": "A selection from Taras Shevchenko's Kobzar, read in English translation.",
+    "coverArtUrl": null,
+    "language": "en",
+    "publicationState": "Published",
+    "authors": ["Taras Shevchenko"],
+    "chapters": [
+      { "position": 1, "title": "Introduction", "runningTimeSeconds": 480 },
+      { "position": 2, "title": "The Bewitched Woman", "runningTimeSeconds": 1320 },
+      { "position": 3, "title": "The Haidamaks, excerpt", "runningTimeSeconds": 1620 }
+    ]
+  },
+  {
+    "slug": "apostol-cherni",
+    "title": "Апостол черні",
+    "description": "Роман про покоління, що шукає опори у вірі та обов'язку.",
+    "coverArtUrl": null,
+    "language": "uk",
+    "publicationState": "Published",
+    "authors": ["Ольга Кобилянська"],
+    "chapters": [
+      { "position": 1, "title": "Частина перша", "runningTimeSeconds": 3600 },
+      { "position": 2, "title": "Частина друга", "runningTimeSeconds": 3900 },
+      { "position": 3, "title": "Частина третя", "runningTimeSeconds": 3300 }
+    ]
+  },
+  {
+    "slug": "boiarynia",
+    "title": "Бояриня",
+    "description": "Драматична поема про вибір між домом і чужиною.",
+    "coverArtUrl": "/covers/boiarynia.svg",
+    "language": "uk",
+    "publicationState": "Published",
+    "authors": ["Леся Українка"],
+    "chapters": [
+      { "position": 1, "title": "Дія перша", "runningTimeSeconds": 1500 },
+      { "position": 2, "title": "Дія друга", "runningTimeSeconds": 1740 },
+      { "position": 3, "title": "Дія третя", "runningTimeSeconds": 1620 }
+    ]
+  },
+  {
+    "slug": "vershnyky",
+    "title": "Вершники",
+    "description": "Новели про громадянську війну та ціну переконань.",
+    "coverArtUrl": null,
+    "language": "uk",
+    "publicationState": "Published",
+    "authors": ["Юрій Яновський"],
+    "chapters": [
+      { "position": 1, "title": "Подвійне коло", "runningTimeSeconds": 2100 },
+      { "position": 2, "title": "Дитинство", "runningTimeSeconds": 1980 }
+    ]
+  },
+  {
+    "slug": "haidamaky",
+    "title": "Гайдамаки",
+    "description": "Поема про Коліївщину, написана 1841 року.",
+    "coverArtUrl": null,
+    "language": "uk",
+    "publicationState": "Published",
+    "authors": ["Тарас Шевченко"],
+    "chapters": [
+      { "position": 1, "title": "Інтродукція", "runningTimeSeconds": 720 },
+      { "position": 2, "title": "Галайда", "runningTimeSeconds": 1500 },
+      { "position": 3, "title": "Конфедерати", "runningTimeSeconds": 1380 },
+      { "position": 4, "title": "Свято в Чигирині", "runningTimeSeconds": 1260 }
+    ]
+  },
+  {
+    "slug": "gudzyk",
+    "title": "Ґудзик",
+    "description": "Роман про випадкову зустріч, що визначила два життя. Проба на сортування: Ґ має стояти одразу після Г, а не в кінці абетки.",
+    "coverArtUrl": null,
+    "language": "uk",
+    "publicationState": "Published",
+    "authors": ["Ірен Роздобудько"],
+    "chapters": [
+      { "position": 1, "title": "Денис", "runningTimeSeconds": 2700 },
+      { "position": 2, "title": "Ліза", "runningTimeSeconds": 2880 },
+      { "position": 3, "title": "Ліка", "runningTimeSeconds": 2520 }
+    ]
+  },
+  {
+    "slug": "dim-na-hori",
+    "title": "Дім на горі",
+    "description": "Роман-балада, у якому побутове й міфічне живуть поруч.",
+    "coverArtUrl": null,
+    "language": "uk",
+    "publicationState": "Published",
+    "authors": ["Валерій Шевчук"],
+    "chapters": [
+      { "position": 1, "title": "Дім на горі", "runningTimeSeconds": 4200 },
+      { "position": 2, "title": "Голос трави", "runningTimeSeconds": 3960 }
+    ]
+  },
+  {
+    "slug": "eneida",
+    "title": "Енеїда",
+    "description": "Бурлескна поема, з якої заведено починати нову українську літературу.",
+    "coverArtUrl": "/covers/eneida.svg",
+    "language": "uk",
+    "publicationState": "Published",
+    "authors": ["Іван Котляревський"],
+    "chapters": [
+      { "position": 1, "title": "Частина перша", "runningTimeSeconds": 2400 },
+      { "position": 2, "title": "Частина друга", "runningTimeSeconds": 2280 },
+      { "position": 3, "title": "Частина третя", "runningTimeSeconds": 2520 },
+      { "position": 4, "title": "Частина четверта", "runningTimeSeconds": 2160 },
+      { "position": 5, "title": "Частина п'ята", "runningTimeSeconds": 2340 }
+    ]
+  },
+  {
+    "slug": "yeretyk",
+    "title": "Єретик",
+    "description": null,
+    "coverArtUrl": null,
+    "language": "uk",
+    "publicationState": "Published",
+    "authors": ["Тарас Шевченко"],
+    "chapters": [
+      { "position": 1, "title": "Посвята", "runningTimeSeconds": 300 },
+      { "position": 2, "title": "Поема", "runningTimeSeconds": 1080 }
+    ]
+  },
+  {
+    "slug": "zhovtyi-kniaz",
+    "title": "Жовтий князь",
+    "description": "Роман про Голодомор, написаний очевидцем.",
+    "coverArtUrl": null,
+    "language": "uk",
+    "publicationState": "Published",
+    "authors": ["Василь Барка"],
+    "chapters": [
+      { "position": 1, "title": "Село", "runningTimeSeconds": 3300 },
+      { "position": 2, "title": "Зима", "runningTimeSeconds": 3540 },
+      { "position": 3, "title": "Весна", "runningTimeSeconds": 3120 }
+    ]
+  },
+  {
+    "slug": "zemlia",
+    "title": "Земля",
+    "description": "Повість про братовбивство і владу землі над людиною.",
+    "coverArtUrl": null,
+    "language": "uk",
+    "publicationState": "Published",
+    "authors": ["Ольга Кобилянська"],
+    "chapters": [
+      { "position": 1, "title": "Розділ перший", "runningTimeSeconds": 2640 },
+      { "position": 2, "title": "Розділ другий", "runningTimeSeconds": 2760 }
+    ]
+  },
+  {
+    "slug": "intermezzo",
+    "title": "Інтермеццо",
+    "description": "Новела про втому й повернення до себе. Запис ще не розділено на частини.",
+    "coverArtUrl": null,
+    "language": "uk",
+    "publicationState": "Published",
+    "authors": ["Михайло Коцюбинський"],
+    "chapters": []
+  },
+  {
+    "slug": "yizhachok-i-zymova-kazka",
+    "title": "Їжачок і зимова казка",
+    "description": "Казка для наймолодших про першу зиму маленького їжака.",
+    "coverArtUrl": null,
+    "language": "uk",
+    "publicationState": "Published",
+    "authors": ["Оксана Ліщук"],
+    "chapters": [
+      { "position": 1, "title": "Сніг", "runningTimeSeconds": 420 },
+      { "position": 2, "title": "Друзі", "runningTimeSeconds": 480 },
+      { "position": 3, "title": "Весна", "runningTimeSeconds": 390 }
+    ]
+  },
+  {
+    "slug": "kaidasheva-simia",
+    "title": "Кайдашева сім'я",
+    "description": "Повість про родину, що не вміє миритися.",
+    "coverArtUrl": null,
+    "language": "uk",
+    "publicationState": "Published",
+    "authors": ["Іван Нечуй-Левицький"],
+    "chapters": [
+      { "position": 1, "title": "Розділ перший", "runningTimeSeconds": 2220 },
+      { "position": 2, "title": "Розділ другий", "runningTimeSeconds": 2400 },
+      { "position": 3, "title": "Розділ третій", "runningTimeSeconds": 2100 }
+    ]
+  },
+  {
+    "slug": "lisova-pisnia",
+    "title": "Лісова пісня",
+    "description": "Драма-феєрія про Мавку, Лукаша і те, чого не можна зрадити.",
+    "coverArtUrl": null,
+    "language": "uk",
+    "publicationState": "Published",
+    "authors": ["Леся Українка"],
+    "chapters": [
+      { "position": 1, "title": "Дія перша", "runningTimeSeconds": 2040 },
+      { "position": 2, "title": "Дія друга", "runningTimeSeconds": 2280 },
+      { "position": 3, "title": "Дія третя", "runningTimeSeconds": 1920 }
+    ]
+  },
+  {
+    "slug": "misto",
+    "title": "Місто",
+    "description": "Роман про Київ двадцятих і про людину, що вирішила його здобути.",
+    "coverArtUrl": null,
+    "language": "uk",
+    "publicationState": "Published",
+    "authors": ["Валер'ян Підмогильний"],
+    "chapters": [
+      { "position": 1, "title": "Частина перша", "runningTimeSeconds": 3480 },
+      { "position": 2, "title": "Частина друга", "runningTimeSeconds": 3660 }
+    ]
+  },
+  {
+    "slug": "natalka-poltavka",
+    "title": "Наталка Полтавка",
+    "description": "П'єса, з якої починається український музичний театр.",
+    "coverArtUrl": null,
+    "language": "uk",
+    "publicationState": "Published",
+    "authors": ["Іван Котляревський"],
+    "chapters": [
+      { "position": 1, "title": "Дія перша", "runningTimeSeconds": 1620 },
+      { "position": 2, "title": "Дія друга", "runningTimeSeconds": 1500 }
+    ]
+  },
+  {
+    "slug": "opovidannia-vovchok",
+    "title": "Оповідання",
+    "description": "Збірка оповідань про кріпацьку добу.",
+    "coverArtUrl": null,
+    "language": "uk",
+    "publicationState": "Published",
+    "authors": ["Марко Вовчок"],
+    "chapters": [
+      { "position": 1, "title": "Козачка", "runningTimeSeconds": 1560 },
+      { "position": 2, "title": "Одарка", "runningTimeSeconds": 1080 },
+      { "position": 3, "title": "Сестра", "runningTimeSeconds": 1260 }
+    ]
+  },
+  {
+    "slug": "podorozh-doktora-leonardo",
+    "title": "Подорож ученого доктора Леонардо",
+    "description": "Пригодницька повість, у якій пейзаж важить не менше за героїв.",
+    "coverArtUrl": null,
+    "language": "uk",
+    "publicationState": "Published",
+    "authors": ["Майк Йогансен"],
+    "chapters": [
+      { "position": 1, "title": "Розділ перший", "runningTimeSeconds": 1980 },
+      { "position": 2, "title": "Розділ другий", "runningTimeSeconds": 2100 },
+      { "position": 3, "title": "Розділ третій", "runningTimeSeconds": 1860 }
+    ]
+  },
+  {
+    "slug": "roksolana",
+    "title": "Роксолана",
+    "description": "Історичний роман про Настю Лісовську, що стала Хуррем.",
+    "coverArtUrl": null,
+    "language": "uk",
+    "publicationState": "Published",
+    "authors": ["Павло Загребельний"],
+    "chapters": [
+      { "position": 1, "title": "Полон", "runningTimeSeconds": 4200 },
+      { "position": 2, "title": "Гарем", "runningTimeSeconds": 4380 },
+      { "position": 3, "title": "Влада", "runningTimeSeconds": 4020 }
+    ]
+  },
+  {
+    "slug": "son-shevchenko",
+    "title": "Сон",
+    "description": "Сатирична поема-комедія. Один із двох записів під цією назвою: разом вони перевіряють, що гортання сторінок нічого не губить і не дублює.",
+    "coverArtUrl": null,
+    "language": "uk",
+    "publicationState": "Published",
+    "authors": ["Тарас Шевченко"],
+    "chapters": [
+      { "position": 1, "title": "Поема", "runningTimeSeconds": 1740 },
+      { "position": 2, "title": "Коментар", "runningTimeSeconds": 900 }
+    ]
+  },
+  {
+    "slug": "son-vovchok",
+    "title": "Сон",
+    "description": "Оповідання. Другий запис під назвою «Сон», іншого автора.",
+    "coverArtUrl": null,
+    "language": "uk",
+    "publicationState": "Published",
+    "authors": ["Марко Вовчок"],
+    "chapters": [{ "position": 1, "title": "Оповідання", "runningTimeSeconds": 1320 }]
+  },
+  {
+    "slug": "tini-zabutykh-predkiv",
+    "title": "Тіні забутих предків",
+    "description": "Повість про Івана й Марічку та про гуцульський світ навколо них.",
+    "coverArtUrl": null,
+    "language": "uk",
+    "publicationState": "Published",
+    "authors": ["Михайло Коцюбинський"],
+    "chapters": [
+      { "position": 1, "title": "Розділ перший", "runningTimeSeconds": 1800 },
+      { "position": 2, "title": "Розділ другий", "runningTimeSeconds": 1920 },
+      { "position": 3, "title": "Розділ третій", "runningTimeSeconds": 1680 }
+    ]
+  },
+  {
+    "slug": "ukradene-shchastia",
+    "title": "Украдене щастя",
+    "description": "Драма про трьох людей, яким затісно в одному домі.",
+    "coverArtUrl": null,
+    "language": "uk",
+    "publicationState": "Published",
+    "authors": ["Іван Франко"],
+    "chapters": [
+      { "position": 1, "title": "Дія перша", "runningTimeSeconds": 1560 },
+      { "position": 2, "title": "Дія друга", "runningTimeSeconds": 1680 },
+      { "position": 3, "title": "Дія третя", "runningTimeSeconds": 1440 }
+    ]
+  },
+  {
+    "slug": "fata-morgana",
+    "title": "Фата моргана",
+    "description": "Повість про село, що чекає на землю.",
+    "coverArtUrl": null,
+    "language": "uk",
+    "publicationState": "Published",
+    "authors": ["Михайло Коцюбинський"],
+    "chapters": [
+      { "position": 1, "title": "Частина перша", "runningTimeSeconds": 2880 },
+      { "position": 2, "title": "Частина друга", "runningTimeSeconds": 3060 }
+    ]
+  },
+  {
+    "slug": "khiba-revut-voly",
+    "title": "Хіба ревуть воли, як ясла повні?",
+    "description": "Роман про Чіпку та про те, як людину роблять пропащою. Довга назва тут навмисна: вона перевіряє, що заголовок не обрізає сам себе.",
+    "coverArtUrl": null,
+    "language": "uk",
+    "publicationState": "Published",
+    "authors": ["Панас Мирний", "Іван Білик"],
+    "chapters": [
+      { "position": 1, "title": "Частина перша", "runningTimeSeconds": 3900 },
+      { "position": 2, "title": "Частина друга", "runningTimeSeconds": 4080 },
+      { "position": 3, "title": "Частина третя", "runningTimeSeconds": 3720 },
+      { "position": 4, "title": "Частина четверта", "runningTimeSeconds": 3540 }
+    ]
+  },
+  {
+    "slug": "chorna-rada",
+    "title": "Чорна рада",
+    "description": "Ще не опублікована. Має поводитися так, ніби її не існує: ані у списку, ані за адресою.",
+    "coverArtUrl": null,
+    "language": "uk",
+    "publicationState": "Draft",
+    "authors": ["Пантелеймон Куліш"],
+    "chapters": [{ "position": 1, "title": "Розділ перший", "runningTimeSeconds": 2400 }]
+  }
+]
