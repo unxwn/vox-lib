@@ -112,7 +112,8 @@ slowest path for the audience this exists for. It is P3 because a small library 
 fully usable through P1 and P2.
 
 **Independent Test**: With a seeded library, search for a known title fragment and a known
-author fragment, and confirm the matching books are returned, counted, and announced.
+author fragment, and confirm the matching books are returned, counted, and announced. This
+story extends the listing built in Story 1 rather than standing entirely on its own.
 
 **Acceptance Scenarios**:
 
@@ -160,26 +161,30 @@ author fragment, and confirm the matching books are returned, counted, and annou
 - **FR-003**: System MUST make every catalogue page fully operable with the keyboard
   alone, with a visible focus indicator and no focus traps.
 - **FR-004**: System MUST divide the catalogue, and any set of search results, into
-  numbered pages of a fixed size, each reachable by its own address, and MUST state which
-  page the visitor is on, how many pages there are, and which books the page covers.
-- **FR-005**: System MUST present the catalogue in a stable default order, so that moving
-  through the pages never repeats or skips a book.
+  numbered pages of 20 books, each reachable by its own address, and MUST state which page
+  the visitor is on, how many pages there are, and which books the page covers.
+- **FR-005**: System MUST present the catalogue in a stable default order, sorted by title
+  and settled by a unique secondary key so that the order is total, and so that moving
+  through the pages never repeats or skips a book when two titles sort identically.
 - **FR-006**: System MUST substitute a placeholder for missing cover art without changing
   how the entry is announced.
-- **FR-007**: System MUST show an explanatory message, on a page that remains navigable,
-  when the catalogue or a set of results is empty.
+- **FR-007**: System MUST show a message that names why nothing is listed and offers a
+  route onward, on a page that remains navigable, when the catalogue or a set of results is
+  empty.
 - **FR-008**: System MUST provide a detail view for each published book showing its title,
   author, cover, description, total running time, and its chapters in order with each
   chapter's title and running time.
 - **FR-009**: System MUST state on the detail view that listening requires an account.
 - **FR-010**: System MUST NOT play, offer, or disclose the location of any audio file
   anywhere in the catalogue.
-- **FR-011**: System MUST return a clearly worded not-found response, carrying a route
-  back to the catalogue, for a book that does not exist or is no longer published.
-- **FR-012**: System MUST deliver every catalogue page and book page as a complete
-  document that already carries the book's title, author, and description, so that a
-  search engine, or a visitor whose device has not finished building the page, still
-  receives the content.
+- **FR-011**: System MUST return a not-found response that names what could not be found
+  and carries a route back to the catalogue, for a book that does not exist or is no longer
+  published.
+- **FR-012**: System MUST deliver every catalogue list page and every book page as a
+  complete document that already carries the book's title, author, and description, so that
+  a search engine, or a visitor whose device has not finished building the page, still
+  receives the content. Search result pages are excluded, because what they contain depends
+  on what the visitor typed.
 - **FR-013**: Users MUST be able to find books by matching text against book titles and
   author names.
 - **FR-014**: System MUST announce the number of results whenever the displayed set of
@@ -188,19 +193,24 @@ author fragment, and confirm the matching books are returned, counted, and annou
   match search terms under Ukrainian collation rules, so that Cyrillic titles sort in the
   order a Ukrainian reader expects and matching ignores letter case.
 - **FR-016**: System MUST NOT require an account to view any catalogue metadata.
-- **FR-017**: System MUST convey every state change that a sighted visitor would notice,
-  including loading, errors, and result counts, to a screen reader user.
+- **FR-017**: System MUST convey to a screen reader user every state change a sighted
+  visitor would notice, including that a page of books is loading and that a request for
+  one failed.
 - **FR-018**: System MUST declare the language of every page, and of any passage written in
   a different language, so that a screen reader pronounces each with the correct voice.
 - **FR-019**: System MUST move focus to the heading of the results whenever the displayed
   page changes, and MUST announce the new position, so that a screen reader user is not
   returned to the top of the page furniture.
+- **FR-020**: System MUST treat a page number below the first page, or above the last page
+  of a catalogue or result set that is not empty, as not found rather than as an empty page.
+  Page one of an empty catalogue remains a valid page and carries the empty state.
 
 ### Key Entities
 
-- **Book**: A published audiobook. Carries a title, a description, cover art, a
-  publication state that decides whether it is listed, and a total running time. Credited
-  to one or more authors and divided into an ordered set of chapters.
+- **Book**: A published audiobook. Carries a stable, address-safe name that identifies it
+  in a page address, a title, a description, cover art, the language its metadata is written
+  in, a publication state that decides whether it is listed, and a total running time.
+  Credited to one or more authors and divided into an ordered set of chapters.
 - **Author**: A person credited for one or more books. Carries a name used for both
   display and searching.
 - **Chapter**: An ordered division of one book. Carries a title, its position in the book,
@@ -222,8 +232,8 @@ author fragment, and confirm the matching books are returned, counted, and annou
   and back with no focus traps, in 100% of test runs.
 - **SC-005**: A visitor who knows a book by name reaches its detail page within 30 seconds
   of arriving at the site.
-- **SC-006**: The catalogue list becomes readable within 3 seconds on a typical mobile
-  connection.
+- **SC-006**: The catalogue list becomes readable within 3 seconds on a connection limited
+  to 1.6 Mbps downlink with 150 ms of round-trip latency.
 - **SC-007**: A catalogue page for a published book appears in public search engine results
   for its title and author within 30 days of publication.
 - **SC-008**: No audio file is reachable from any catalogue page without an account, across

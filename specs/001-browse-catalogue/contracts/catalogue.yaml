@@ -1,0 +1,199 @@
+openapi: 3.1.0
+info:
+  title: vox-lib catalogue
+  version: '1.0'
+  description: >
+    Public, unauthenticated read access to the audiobook catalogue. Every response here is
+    metadata only. No endpoint in this contract returns audio, a link to audio, or a storage
+    key, and none of them requires an account.
+
+servers:
+  - url: /
+    description: Same origin. The browser reaches these paths through the dev server proxy.
+
+paths:
+  /api/books:
+    get:
+      summary: List published books, newest page first by title
+      description: >
+        Returns one page of published books ordered by title under Ukrainian collation.
+        When q is supplied, only books whose title or author name contains it are returned,
+        matched without regard to letter case. Page size is fixed.
+      operationId: listBooks
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: One-based page number.
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+          description: Search term matched against book titles and author names.
+      responses:
+        '200':
+          description: >
+            A page of books. Page 1 of an empty catalogue is a valid page and returns an
+            empty list with a page count of zero.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedBooks'
+        '400':
+          description: The page number or search term is not well formed.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '404':
+          description: >
+            The page number is above the last page of a catalogue that is not empty.
+            Returned rather than an empty page so that crawlers do not index empty results.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  /api/books/{slug}:
+    get:
+      summary: Read one published book with its chapters
+      operationId: getBook
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The book's stable, address-safe name.
+      responses:
+        '200':
+          description: The book and its chapters in order.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookDetail'
+        '404':
+          description: >
+            No published book has this slug. An unpublished book is indistinguishable from
+            one that never existed.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+components:
+  schemas:
+    PagedBooks:
+      type: object
+      required: [items, page, pageSize, totalCount, pageCount]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookSummary'
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          const: 20
+        totalCount:
+          type: integer
+          minimum: 0
+          description: Total published books matching the request, across all pages.
+        pageCount:
+          type: integer
+          minimum: 0
+          description: Zero when nothing matches.
+
+    BookSummary:
+      type: object
+      required: [slug, title, authors, chapterCount, totalRunningTimeSeconds]
+      properties:
+        slug:
+          type: string
+        title:
+          type: string
+        authors:
+          type: array
+          minItems: 1
+          items:
+            type: string
+        coverArtUrl:
+          type: [string, 'null']
+          description: Absent or null when the book has no cover art.
+        chapterCount:
+          type: integer
+          minimum: 0
+        totalRunningTimeSeconds:
+          type: integer
+          minimum: 0
+          description: Zero when the book has no chapters yet.
+
+    BookDetail:
+      type: object
+      required: [slug, title, authors, language, chapters, chapterCount, totalRunningTimeSeconds]
+      properties:
+        slug:
+          type: string
+        title:
+          type: string
+        authors:
+          type: array
+          minItems: 1
+          items:
+            type: string
+        description:
+          type: [string, 'null']
+        coverArtUrl:
+          type: [string, 'null']
+        language:
+          type: string
+          description: >
+            The language tag the book's own metadata is written in, so its page can declare
+            it and a screen reader reads the book in the right voice. FR-018.
+        chapterCount:
+          type: integer
+          minimum: 0
+        totalRunningTimeSeconds:
+          type: integer
+          minimum: 0
+        chapters:
+          type: array
+          description: Ordered by position. Empty when chapters have not been added yet.
+          items:
+            $ref: '#/components/schemas/Chapter'
+
+    Chapter:
+      type: object
+      required: [position, title, runningTimeSeconds]
+      properties:
+        position:
+          type: integer
+          minimum: 1
+        title:
+          type: string
+        runningTimeSeconds:
+          type: integer
+          minimum: 0
+
+    ProblemDetails:
+      type: object
+      description: RFC 9457 problem details, produced by the API's existing problem details handler.
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
