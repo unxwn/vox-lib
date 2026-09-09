@@ -13,12 +13,23 @@ Because the application will handle copyrighted audiobooks (prior to establishin
 
 A monolithic architecture is unviable because audio playback must remain uninterrupted during UI navigation (requiring a Single Page Application approach).
 
-| Component           | Proposed Technology             | Open Questions / Considerations                                                                                                             |
-| :------------------ | :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Backend**         | ASP.NET Core Web API            | Confirm PostgreSQL and migration tooling (Liquibase vs. EF Core Code-First).                                                                |
-| **Frontend**        | React (Vite) or Next.js         | Next.js (using `next-pwa` for service workers) vs. Vite SPA (using `vite-plugin-pwa`). Is Next.js SSR overhead necessary for this use case? |
-| **Audio Player**    | Native `<audio>` or `howler.js` | `howler.js` provides better cross-browser compatibility for background audio, but native `<audio>` with pure JS might be lighter.           |
-| **Package Manager** | pnpm, npm, or yarn              | `pnpm` is recommended for disk efficiency and strict dependency resolution.                                                                 |
+| Component           | Proposed Technology             | Status                                                                                                                                                 |
+| :------------------ | :------------------------------ | :----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Backend**         | ASP.NET Core Web API            | **Decided.** PostgreSQL is the system of record, created with Ukrainian collation. Migration tooling (Liquibase vs. EF Core Code-First) is still open. |
+| **Frontend**        | React (Vite)                    | **Decided.** Vite SPA with `vite-plugin-pwa`. Next.js was rejected; see the rendering note below.                                                      |
+| **Audio Player**    | Native `<audio>` or `howler.js` | Still open. `howler.js` provides better cross-browser compatibility for background audio, but native `<audio>` with pure JS might be lighter.          |
+| **Package Manager** | pnpm                            | **Decided.** Chosen for disk efficiency and strict dependency resolution.                                                                              |
+
+**Decision: Vite, with catalogue pages generated at publish time.** The public catalogue has
+to be indexable by search engines, so a catalogue or book page must arrive as a complete
+document rather than the empty root element a client-rendered app ships. That is satisfied
+by generating those pages whenever content is published and hydrating them into the
+client-side application, whose in-page navigation is what keeps playback uninterrupted.
+Next.js was rejected because its server rendering would put a Node process in production
+alongside the .NET API, which a catalogue of this size does not justify. The cost of the
+choice is that publishing a book has to trigger a regeneration of the pages it appears on,
+so a new book becomes visible after that regeneration rather than instantly. Search result
+pages depend on what the visitor typed and are deliberately not indexable.
 
 ## 3. Accessibility (a11y): Core Priority
 

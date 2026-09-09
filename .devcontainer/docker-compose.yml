@@ -1,0 +1,63 @@
+# The dev container is Compose-based rather than a bare Dockerfile because the
+# catalogue needs a real PostgreSQL: FR-015 ordering and FR-013 matching are
+# database behaviours, so testing them anywhere else tests something the product
+# does not do.
+#
+# Nothing in CI builds this file (see CLAUDE.md), so a green pull request does
+# not verify it. Rebuild the container locally before merging a change here.
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Keeps the container alive; VS Code attaches and runs the real processes.
+    command: sleep infinity
+    network_mode: service:db
+    volumes:
+      # The repository itself, bind mounted from the host. With a bare
+      # Dockerfile VS Code adds this implicitly; under Compose it has to be
+      # declared, and workspaceFolder in devcontainer.json must match it.
+      - ..:/workspaces/vox-lib:cached
+      # Named volumes survive a rebuild; /home/vscode is overlayfs and does not.
+      # These were previously the "mounts" array in devcontainer.json and belong
+      # here now that Compose owns the container.
+      - vox-lib-claude:/home/vscode/.claude
+      - vox-lib-gh:/home/vscode/.config/gh
+      - vox-lib-bash-history:/commandhistory
+      - vox-lib-nuget:/home/vscode/.nuget/packages
+    environment:
+      # The single source of truth for how the application and the tests reach
+      # the database. Host is localhost because network_mode above puts this
+      # container on the db container's network stack.
+      VOXLIB_DB_CONNECTION: Host=localhost;Port=5432;Database=voxlib;Username=voxlib;Password=voxlib
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: voxlib
+      POSTGRES_PASSWORD: voxlib
+      POSTGRES_DB: voxlib
+    volumes:
+      # The data directory must be a named volume. Anything on the container
+      # filesystem is erased on rebuild.
+      - vox-lib-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # app waits on this, so the API never starts against a database that is
+      # still running its bootstrap scripts.
+      test: ['CMD-SHELL', 'pg_isready -U voxlib -d voxlib']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+volumes:
+  vox-lib-claude:
+  vox-lib-gh:
+  vox-lib-bash-history:
+  vox-lib-nuget:
+  vox-lib-pgdata:

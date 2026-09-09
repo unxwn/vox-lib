@@ -1,9 +1,11 @@
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { reactRouter } from '@react-router/dev/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  // reactRouter() handles React itself, so @vitejs/plugin-react is not listed
+  // here as well; running both would apply the React transform twice.
+  plugins: [reactRouter()],
   server: {
     // Bind to 0.0.0.0 so the Dev Containers port forwarder can reach it.
     host: true,

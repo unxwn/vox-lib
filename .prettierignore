@@ -12,3 +12,10 @@ backend
 .specify
 .claude/skills
 specs
+
+# Generated: React Router build output and route types, and the API wire types
+# generated from the OpenAPI document. Formatting generated files only creates
+# diff noise, and schema.d.ts is compared byte for byte by the drift check.
+frontend/build
+.react-router
+frontend/src/api/schema.d.ts

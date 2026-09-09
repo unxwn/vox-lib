@@ -2,9 +2,15 @@
 // Format reference: https://aka.ms/devcontainer.json
 {
   "name": "vox-lib (.NET 10 + React)",
-  "build": {
-    "dockerfile": "Dockerfile"
-  },
+
+  // Compose rather than a bare Dockerfile, because the catalogue needs a real
+  // PostgreSQL alongside the application. The service names and the volume list
+  // live in docker-compose.yml; workspaceFolder must match the bind mount
+  // declared there.
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/vox-lib",
+  "shutdownAction": "stopCompose",
 
   "features": {
     // Node 24 "Krypton" is the current Active LTS. pnpm is installed by the
@@ -18,24 +24,14 @@
   },
 
   // Named volumes survive a container REBUILD; /home/vscode is on overlayfs and
-  // does not. Anything here that you would be sad to lose must be a volume.
-  "mounts": [
-    // Claude Code sessions, credentials and settings. CLAUDE_CONFIG_DIR below
-    // pulls ~/.claude.json in here too; by default it sits outside this mount.
-    "source=vox-lib-claude,target=/home/vscode/.claude,type=volume",
-    // GitHub CLI auth. The feature installs gh, but its token lands in
-    // ~/.config/gh, which is overlayfs, so `gh auth login` would be needed
-    // again after every rebuild.
-    "source=vox-lib-gh,target=/home/vscode/.config/gh,type=volume",
-    // Shell history (HISTFILE is repointed here via remoteEnv).
-    "source=vox-lib-bash-history,target=/commandhistory,type=volume",
-    // NuGet package cache. Avoids re-downloading the world on every rebuild.
-    "source=vox-lib-nuget,target=/home/vscode/.nuget/packages,type=volume"
-    // NOTE: the pnpm store is deliberately NOT a volume. pnpm hardlinks from
-    // its store into node_modules, and hardlinks cannot cross filesystems, so
-    // the store must live on the same filesystem as node_modules. It is set to
-    // <repo>/.pnpm-store in post-create.sh, inside the workspace bind mount.
-  ],
+  // does not. Anything you would be sad to lose must be a volume. They moved
+  // into docker-compose.yml when this became a Compose dev container, which is
+  // also where the reasoning for each one now lives.
+  //
+  // NOTE: the pnpm store is deliberately NOT a volume. pnpm hardlinks from its
+  // store into node_modules, and hardlinks cannot cross filesystems, so the
+  // store must live on the same filesystem as node_modules. It is set to
+  // <repo>/.pnpm-store in post-create.sh, inside the workspace bind mount.
 
   "remoteEnv": {
     "HISTFILE": "/commandhistory/.bash_history",

@@ -1,0 +1,255 @@
+/*
+ * Long titles are the normal case in this catalogue, not the exception, so the
+ * layout is built to absorb them rather than to clip them. Nothing here hides
+ * text from assistive technology: no fixed heights that cut a wrapped line off,
+ * no overflow: hidden over live text, and no truncation that leaves a screen
+ * reader reading a fragment the eye cannot finish.
+ */
+
+.catalogue {
+  margin: 0 auto;
+  max-width: 60rem;
+  padding: 1.5rem 1rem 4rem;
+}
+
+.catalogue__heading {
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+  line-height: 1.2;
+}
+
+/* The heading takes focus on a page change, so the outline has to be visible. */
+.catalogue__heading:focus-visible,
+.catalogue__link:focus-visible,
+.pagination a:focus-visible,
+.state button:focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 3px;
+}
+
+.catalogue__position {
+  margin: 0 0 1.5rem;
+  color: inherit;
+}
+
+.catalogue__list {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+}
+
+.catalogue__item {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  /* min-width: 0 lets a grid item shrink below its content, which is what allows
+     a very long unbroken title to wrap instead of forcing the row wider. */
+  min-width: 0;
+}
+
+.catalogue__link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.catalogue__title {
+  font-weight: 600;
+  line-height: 1.3;
+  /* Wrap anywhere rather than overflow: a single very long word must not push
+     the row off the side of the screen where it cannot be read or reached. */
+  overflow-wrap: anywhere;
+}
+
+.catalogue__authors {
+  overflow-wrap: anywhere;
+}
+
+.cover-art {
+  flex: 0 0 auto;
+  width: 3.5rem;
+  height: 5rem;
+  object-fit: cover;
+  border-radius: 0.25rem;
+}
+
+.cover-art--placeholder {
+  display: block;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgb(0 0 0 / 6%),
+      rgb(0 0 0 / 6%) 6px,
+      transparent 6px,
+      transparent 12px
+    ),
+    rgb(0 0 0 / 4%);
+}
+
+.state {
+  margin: 1rem 0;
+}
+
+.pagination {
+  margin-top: 2rem;
+}
+
+.pagination__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pagination a {
+  display: inline-block;
+  padding: 0.4rem 0.7rem;
+}
+
+.pagination__gap {
+  padding: 0.4rem 0.2rem;
+}
+
+/*
+ * One book's page. The same rules apply as to the list: nothing is given a fixed
+ * height that would cut a wrapped line off, and nothing that carries text is
+ * hidden from assistive technology to make the layout tidier.
+ */
+
+.book__authors {
+  margin: 0 0 1.5rem;
+}
+
+.book__label {
+  font-weight: 600;
+}
+
+.book__summary {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+/* The cover is larger here than in the list: this is the book's own page. */
+.book__summary .cover-art {
+  width: 7rem;
+  height: 10rem;
+}
+
+.book__facts {
+  display: grid;
+  gap: 0.5rem 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  margin: 0;
+  min-width: 0;
+}
+
+.book__facts dt {
+  font-weight: 600;
+}
+
+.book__facts dd {
+  margin: 0;
+}
+
+.book__section {
+  margin: 2rem 0 0.75rem;
+  font-size: 1.25rem;
+  line-height: 1.3;
+}
+
+.book__description {
+  margin: 0;
+  max-width: 45rem;
+  overflow-wrap: anywhere;
+}
+
+.book__listening {
+  margin: 2rem 0 1.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.25rem;
+  max-width: 45rem;
+}
+
+.chapters__list {
+  margin: 0;
+  padding-left: 1.5rem;
+  display: grid;
+  gap: 0.5rem;
+  max-width: 45rem;
+}
+
+.chapters__item {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.chapters__title {
+  overflow-wrap: anywhere;
+}
+
+.chapters__duration {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The search form. Laid out so the field and its button wrap onto separate
+   lines on a narrow screen rather than shrinking the field to nothing. */
+
+.catalogue__search-link {
+  margin: 0 0 1rem;
+}
+
+.search__form {
+  margin: 0 0 1.5rem;
+  max-width: 40rem;
+}
+
+.search__label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-weight: 600;
+}
+
+.search__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.search__input {
+  flex: 1 1 14rem;
+  min-width: 0;
+  padding: 0.45rem 0.6rem;
+  font: inherit;
+  border: 1px solid var(--border);
+  border-radius: 0.25rem;
+}
+
+.search__controls button {
+  padding: 0.45rem 1rem;
+  font: inherit;
+}
+
+.search__input:focus-visible,
+.search__controls button:focus-visible,
+.catalogue__search-link a:focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 3px;
+}
+
+.search__prompt {
+  margin: 0;
+}

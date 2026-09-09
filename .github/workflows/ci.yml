@@ -18,6 +18,28 @@ jobs:
   backend:
     name: backend (build + test)
     runs-on: ubuntu-latest
+
+    # The endpoint tests run against a real PostgreSQL. Ordering under Ukrainian
+    # collation and case-insensitive matching are database behaviours, so an
+    # in-memory provider would verify something the product does not do.
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: voxlib
+          POSTGRES_PASSWORD: voxlib
+          POSTGRES_DB: voxlib
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U voxlib -d voxlib"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      VOXLIB_DB_CONNECTION: Host=localhost;Port=5432;Database=voxlib;Username=voxlib;Password=voxlib
+
     steps:
       - uses: actions/checkout@v7
 
@@ -58,6 +80,31 @@ jobs:
   frontend:
     name: frontend (lint + build)
     runs-on: ubuntu-latest
+
+    # The build prerenders catalogue and book pages by reading the real API, so
+    # this job needs the database and the API too. Extending this job rather
+    # than adding a new one is deliberate: the job name is the status check
+    # context the branch protection ruleset matches, and a new job would not
+    # satisfy the rule until the ruleset was updated to name it.
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: voxlib
+          POSTGRES_PASSWORD: voxlib
+          POSTGRES_DB: voxlib
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U voxlib -d voxlib"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      VOXLIB_DB_CONNECTION: Host=localhost;Port=5432;Database=voxlib;Username=voxlib;Password=voxlib
+      VOXLIB_API_ORIGIN: http://localhost:5080
+
     steps:
       - uses: actions/checkout@v7
 
@@ -68,6 +115,10 @@ jobs:
           node-version: '24'
           cache: pnpm
 
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
       - run: pnpm install --frozen-lockfile
 
       - name: Check formatting
@@ -76,8 +127,31 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      # The prerender reads the API rather than the committed seed file, so the
+      # build exercises the same path production uses. The API applies pending
+      # migrations and seeds an empty catalogue at startup, so nothing else has
+      # to prepare the database first.
+      - name: Start the API for the prerender
+        run: |
+          dotnet run --project backend/src/VoxLib.Api --launch-profile http > /tmp/api.log 2>&1 &
+          for _ in $(seq 1 60); do
+            if curl -fsS http://localhost:5080/health > /dev/null 2>&1; then
+              echo "API is up"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "The API did not become healthy in time:"
+          cat /tmp/api.log
+          exit 1
+
       # Runs tsc -b, then vite build. The bundle is discarded; the point is that
       # both steps succeed. vite build catches what tsc cannot: imports that do
       # not resolve at bundle time, missing referenced assets, plugin failures.
+      # With prerendering it also proves every catalogue and book page renders.
       - name: Typecheck and build
         run: pnpm --filter frontend build
+
+      - name: Show API log on failure
+        if: failure()
+        run: cat /tmp/api.log || true
