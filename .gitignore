@@ -44,3 +44,12 @@ Thumbs.db
 
 # pnpm store (kept on the workspace mount so pnpm can hardlink into node_modules)
 .pnpm-store/
+
+# React Router: build output and the route types it generates from routes.ts
+frontend/build/
+.react-router/
+
+# Playwright
+playwright-report/
+blob-report/
+test-results/
