@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using VoxLib.Dal.Persistence;
@@ -11,9 +12,11 @@ using VoxLib.Dal.Persistence;
 namespace VoxLib.Dal.Persistence.Migrations
 {
     [DbContext(typeof(VoxLibDbContext))]
-    partial class VoxLibDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260909231819_ServerSideSessions")]
+    partial class ServerSideSessions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

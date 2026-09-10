@@ -53,4 +53,23 @@ public class AnonymousAccessTests(CatalogueApiFixture fixture)
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
+
+    /// <summary>
+    /// FR-027 and SC-012, asked again now that the product has authentication at
+    /// all. The catalogue existing before accounts did is not evidence that it
+    /// still works without one: adding a cookie scheme, an authorization
+    /// pipeline and a rate limiter is exactly the kind of change that quietly
+    /// puts a gate on everything.
+    /// </summary>
+    [Theory]
+    [InlineData("/api/books")]
+    [InlineData("/api/books?page=1")]
+    [InlineData("/api/books?q=а")]
+    public async Task The_catalogue_stays_readable_now_that_accounts_exist(string path)
+    {
+        var response = await _client.GetAsync(path);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Empty(response.Headers.WwwAuthenticate);
+    }
 }

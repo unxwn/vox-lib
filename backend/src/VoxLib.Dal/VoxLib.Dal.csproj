@@ -13,6 +13,15 @@
          the projects downstream resolve 10.0.4 against a VoxLib.Dal built on
          10.0.12, which is an assembly unification warning on every build. -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.12" />
+    <!-- Identity supplies the user store, the password hasher, the lockout
+         counter and the link tokens. Nothing else: no Identity UI package, and
+         the API is hand written rather than MapIdentityApi. -->
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.12" />
+    <!-- The key ring encrypts the session cookie and every confirmation and
+         recovery link. Its default store is on the container filesystem, which
+         is erased on rebuild, so it goes in the database beside the accounts it
+         protects. -->
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="10.0.12" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>

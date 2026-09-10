@@ -4,6 +4,7 @@
     <Project Path="src/VoxLib.Dal/VoxLib.Dal.csproj" />
     <Project Path="src/VoxLib.Model/VoxLib.Model.csproj" />
     <Project Path="src/VoxLib.Orchestrator/VoxLib.Orchestrator.csproj" />
+    <Project Path="src/VoxLib.Platform/VoxLib.Platform.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/VoxLib.Api.Tests/VoxLib.Api.Tests.csproj" />

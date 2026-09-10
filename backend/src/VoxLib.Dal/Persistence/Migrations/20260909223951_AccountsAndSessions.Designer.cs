@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using VoxLib.Dal.Persistence;
@@ -11,9 +12,11 @@ using VoxLib.Dal.Persistence;
 namespace VoxLib.Dal.Persistence.Migrations
 {
     [DbContext(typeof(VoxLibDbContext))]
-    partial class VoxLibDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260909223951_AccountsAndSessions")]
+    partial class AccountsAndSessions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -226,30 +229,6 @@ namespace VoxLib.Dal.Persistence.Migrations
                         .HasDatabaseName("UserNameIndex");
 
                     b.ToTable("accounts", (string)null);
-                });
-
-            modelBuilder.Entity("VoxLib.Dal.Account.SessionDao", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)")
-                        .HasColumnName("id");
-
-                    b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("expires_at");
-
-                    b.Property<byte[]>("Payload")
-                        .IsRequired()
-                        .HasColumnType("bytea")
-                        .HasColumnName("payload");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ExpiresAt")
-                        .HasDatabaseName("ix_sessions_expires_at");
-
-                    b.ToTable("sessions", (string)null);
                 });
 
             modelBuilder.Entity("VoxLib.Dal.Book.AuthorDao", b =>

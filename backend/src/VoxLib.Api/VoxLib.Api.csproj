@@ -14,6 +14,7 @@
     <ProjectReference Include="..\VoxLib.Model\VoxLib.Model.csproj" />
     <ProjectReference Include="..\VoxLib.Orchestrator\VoxLib.Orchestrator.csproj" />
     <ProjectReference Include="..\VoxLib.Dal\VoxLib.Dal.csproj" />
+    <ProjectReference Include="..\VoxLib.Platform\VoxLib.Platform.csproj" />
   </ItemGroup>
 
 </Project>
