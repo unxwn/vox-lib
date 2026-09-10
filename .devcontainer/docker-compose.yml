@@ -45,7 +45,7 @@ services:
     volumes:
       # The data directory must be a named volume. Anything on the container
       # filesystem is erased on rebuild.
-      - vox-lib-pgdata:/var/lib/postgresql/data
+      - vox-lib-pgdata:/var/lib/postgresql
     healthcheck:
       # app waits on this, so the API never starts against a database that is
       # still running its bootstrap scripts.
@@ -55,9 +55,36 @@ services:
       retries: 20
       start_period: 10s
 
+  mailpit:
+    image: axllent/mailpit
+    restart: unless-stopped
+    # Same network namespace as app and db, so the API reaches SMTP at
+    # localhost:1025 and a browser reaches the mailbox at localhost:8025.
+    # An ordinary bridge network would leave it unreachable from the API, and
+    # the symptom is a connection refused at the moment a message is sent.
+    network_mode: service:db
+    environment:
+      # Development only: accept whatever credentials are offered, over plain
+      # SMTP. Nothing here ever reaches a real address.
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+
 volumes:
+  # These four predate Compose: they were the "mounts" array in
+  # devcontainer.json, so Docker created them under their plain names. Compose
+  # otherwise prefixes every volume with the project name
+  # (vox-lib_devcontainer_...), which silently mounts a *different*, empty
+  # volume and looks like the data was lost. "name" pins the real name so the
+  # existing volumes keep being used; unlike "external: true" it still lets
+  # Compose create them on a machine that has none.
   vox-lib-claude:
+    name: vox-lib-claude
   vox-lib-gh:
+    name: vox-lib-gh
   vox-lib-bash-history:
+    name: vox-lib-bash-history
   vox-lib-nuget:
+    name: vox-lib-nuget
+  # Not pinned: this one was born under Compose, so its prefixed name is the
+  # one holding the current database.
   vox-lib-pgdata:
