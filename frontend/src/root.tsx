@@ -1,4 +1,5 @@
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
+import { SessionMenu } from './components/SessionMenu'
 
 /**
  * The document every page is served inside. The language is declared here, on
@@ -25,5 +26,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function Root() {
-  return <Outlet />
+  return (
+    <>
+      {/*
+        On every page, so a person on a shared device can tell at a glance, and
+        with a screen reader, whether they are still signed in. It renders after
+        the page loads rather than being built into the document, because these
+        pages are prerendered and who is signed in is not a property of the
+        document.
+      */}
+      <SessionMenu />
+      <Outlet />
+    </>
+  )
 }

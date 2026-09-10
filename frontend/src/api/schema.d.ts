@@ -19,6 +19,42 @@ export interface paths {
   "/api/weatherforecast": {
     get: operations["GetWeatherForecast"];
   };
+  "/api/account/antiforgery-token": {
+    /** Obtain the antiforgery token for this browser */
+    get: operations["GetAntiforgeryToken"];
+  };
+  "/api/account/password-policy": {
+    /** What a password must satisfy */
+    get: operations["GetPasswordPolicy"];
+  };
+  "/api/account/registrations": {
+    /** Create an account */
+    post: operations["Register"];
+  };
+  "/api/account/confirmations": {
+    /** Confirm an address by redeeming the link sent to it */
+    post: operations["ConfirmEmail"];
+  };
+  "/api/account/confirmation-requests": {
+    /** Ask for another confirmation message */
+    post: operations["RequestConfirmation"];
+  };
+  "/api/account/recovery-requests": {
+    /** Ask for a link that allows setting a new password */
+    post: operations["RequestRecovery"];
+  };
+  "/api/account/recoveries": {
+    /** Set a new password by redeeming a recovery link */
+    post: operations["RecoverPassword"];
+  };
+  "/api/account/session": {
+    /** Who this browser is signed in as */
+    get: operations["GetSession"];
+    /** Sign in */
+    post: operations["SignIn"];
+    /** Sign out */
+    delete: operations["SignOut"];
+  };
 }
 
 export type webhooks = Record<string, never>;
@@ -55,6 +91,23 @@ export interface components {
       /** Format: int32 */
       runningTimeSeconds: number;
     };
+    ConfirmationResult: {
+      outcome: string;
+    };
+    EmailOnlyRequest: {
+      email: null | string;
+    };
+    HttpValidationProblemDetails: {
+      type?: null | string;
+      title?: null | string;
+      /** Format: int32 */
+      status?: null | number;
+      detail?: null | string;
+      instance?: null | string;
+      errors?: {
+        [key: string]: string[];
+      };
+    };
     PagedBooks: {
       items: components["schemas"]["BookSummary"][];
       /** Format: int32 */
@@ -66,6 +119,20 @@ export interface components {
       /** Format: int32 */
       pageCount: number;
     };
+    PasswordPolicyResponse: {
+      /** Format: int32 */
+      minimumLength: number;
+      requiresDigit: boolean;
+      requiresUppercase: boolean;
+      requiresLowercase: boolean;
+      requiresNonAlphanumeric: boolean;
+    };
+    PasswordResetRequest: {
+      /** Format: uuid */
+      accountId: string;
+      token: null | string;
+      password: null | string;
+    };
     ProblemDetails: {
       type?: null | string;
       title?: null | string;
@@ -73,6 +140,24 @@ export interface components {
       status?: null | number;
       detail?: null | string;
       instance?: null | string;
+    };
+    RegistrationRequest: {
+      email: null | string;
+      password: null | string;
+    };
+    SessionResponse: {
+      signedIn: boolean;
+      email: null | string;
+      isVerifiedBeneficiary: boolean;
+    };
+    SignInRequest: {
+      email: null | string;
+      password: null | string;
+    };
+    TokenRequest: {
+      /** Format: uuid */
+      accountId: string;
+      token: null | string;
     };
     WeatherForecast: {
       /** Format: date */
@@ -163,6 +248,200 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["WeatherForecast"][];
         };
+      };
+    };
+  };
+  /** Obtain the antiforgery token for this browser */
+  GetAntiforgeryToken: {
+    responses: {
+      /** @description OK */
+      200: {
+        content: never;
+      };
+    };
+  };
+  /** What a password must satisfy */
+  GetPasswordPolicy: {
+    responses: {
+      /** @description OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["PasswordPolicyResponse"];
+        };
+      };
+    };
+  };
+  /** Create an account */
+  Register: {
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RegistrationRequest"];
+      };
+    };
+    responses: {
+      /** @description Accepted */
+      202: {
+        content: never;
+      };
+      /** @description Bad Request */
+      400: {
+        content: {
+          "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        content: {
+          "application/problem+json": components["schemas"]["ProblemDetails"];
+        };
+      };
+    };
+  };
+  /** Confirm an address by redeeming the link sent to it */
+  ConfirmEmail: {
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TokenRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["ConfirmationResult"];
+        };
+      };
+      /** @description Gone */
+      410: {
+        content: {
+          "application/problem+json": components["schemas"]["ProblemDetails"];
+        };
+      };
+    };
+  };
+  /** Ask for another confirmation message */
+  RequestConfirmation: {
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["EmailOnlyRequest"];
+      };
+    };
+    responses: {
+      /** @description Accepted */
+      202: {
+        content: never;
+      };
+      /** @description Bad Request */
+      400: {
+        content: {
+          "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+        };
+      };
+    };
+  };
+  /** Ask for a link that allows setting a new password */
+  RequestRecovery: {
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["EmailOnlyRequest"];
+      };
+    };
+    responses: {
+      /** @description Accepted */
+      202: {
+        content: never;
+      };
+      /** @description Bad Request */
+      400: {
+        content: {
+          "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+        };
+      };
+    };
+  };
+  /** Set a new password by redeeming a recovery link */
+  RecoverPassword: {
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PasswordResetRequest"];
+      };
+    };
+    responses: {
+      /** @description No Content */
+      204: {
+        content: never;
+      };
+      /** @description Bad Request */
+      400: {
+        content: {
+          "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+        };
+      };
+      /** @description Gone */
+      410: {
+        content: {
+          "application/problem+json": components["schemas"]["ProblemDetails"];
+        };
+      };
+    };
+  };
+  /** Who this browser is signed in as */
+  GetSession: {
+    responses: {
+      /** @description OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["SessionResponse"];
+        };
+      };
+    };
+  };
+  /** Sign in */
+  SignIn: {
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SignInRequest"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["SessionResponse"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        content: {
+          "application/problem+json": components["schemas"]["HttpValidationProblemDetails"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        content: {
+          "application/problem+json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        content: {
+          "application/problem+json": components["schemas"]["ProblemDetails"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        content: {
+          "application/problem+json": components["schemas"]["ProblemDetails"];
+        };
+      };
+    };
+  };
+  /** Sign out */
+  SignOut: {
+    responses: {
+      /** @description No Content */
+      204: {
+        content: never;
       };
     };
   };

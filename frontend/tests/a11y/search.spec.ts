@@ -11,10 +11,13 @@ import { waitForHydration } from './support'
  * VoiceOver and TalkBack recorded in manual-verification.md.
  */
 
+// The status assertions below are scoped to main. The account menu carries a
+// polite live region on every page, so a bare status lookup matches two
+// elements: this page's result count and that one. Scoping says which is meant.
 test.describe('search', () => {
   test('has no critical or serious accessibility violations', async ({ page }) => {
     await page.goto('/search?q=сон')
-    await expect(page.getByRole('status')).toContainText('Знайдено')
+    await expect(page.locator('main').getByRole('status')).toContainText('Знайдено')
 
     const { violations } = await new AxeBuilder({ page }).analyze()
     const blocking = violations.filter(
@@ -58,7 +61,7 @@ test.describe('search', () => {
   test('the number of results is announced politely', async ({ page }) => {
     await page.goto('/search?q=сон')
 
-    const status = page.getByRole('status')
+    const status = page.locator('main').getByRole('status')
 
     // role="status" is implicitly aria-live="polite", so it is read at the next
     // pause rather than interrupting what the visitor is doing.
@@ -70,13 +73,13 @@ test.describe('search', () => {
     await waitForHydration(page)
 
     const field = page.getByRole('searchbox', { name: /Назва книжки/ })
-    await expect(page.getByRole('status')).toContainText('Знайдено книжок: 2')
+    await expect(page.locator('main').getByRole('status')).toContainText('Знайдено книжок: 2')
 
     await field.focus()
     await field.fill('шевченко')
     await page.keyboard.press('Enter')
 
-    await expect(page.getByRole('status')).toContainText('Знайдено книжок: 3')
+    await expect(page.locator('main').getByRole('status')).toContainText('Знайдено книжок: 3')
 
     // FR-014 asks for the count to be announced; it does not ask for focus to
     // move, and taking it here would pull the keyboard out of the field a
@@ -90,21 +93,21 @@ test.describe('search', () => {
   }) => {
     await page.goto('/search?q=щосьчогонемає')
 
-    await expect(page.getByRole('status')).toContainText('нічого не знайдено')
+    await expect(page.locator('main').getByRole('status')).toContainText('нічого не знайдено')
     await expect(page.getByRole('link', { name: /Переглянути весь каталог/ })).toBeVisible()
   })
 
   test('an author name finds every book they wrote', async ({ page }) => {
     await page.goto('/search?q=коцюбинський')
 
-    await expect(page.getByRole('status')).toContainText('Знайдено книжок: 3')
+    await expect(page.locator('main').getByRole('status')).toContainText('Знайдено книжок: 3')
   })
 
   test('an unpublished book cannot be found by searching for it', async ({ page }) => {
     // Чорна рада is seeded as a draft.
     await page.goto('/search?q=чорна')
 
-    await expect(page.getByRole('status')).toContainText('нічого не знайдено')
+    await expect(page.locator('main').getByRole('status')).toContainText('нічого не знайдено')
   })
 
   test('results are not offered for indexing', async ({ page }) => {
@@ -129,7 +132,7 @@ test.describe('search', () => {
     // that search, not page two of the catalogue.
     await expect(page).toHaveURL(/q=%D0%B0/)
     await expect(page).toHaveURL(/page=2/)
-    await expect(page.getByRole('status')).toContainText('Знайдено книжок: 23')
+    await expect(page.locator('main').getByRole('status')).toContainText('Знайдено книжок: 23')
   })
 
   test('the search is reachable from the catalogue', async ({ page }) => {
