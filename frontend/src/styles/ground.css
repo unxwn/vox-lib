@@ -1,0 +1,103 @@
+/*
+ * The two decorative layers, and the reason they are generated two different
+ * ways rather than one.
+ *
+ * The grain is an feTurbulence rendered once into a 160 by 160 tile, inlined as
+ * a data URI and repeated. Not a viewport-sized filter: a filter's result is
+ * re-evaluated whenever its box changes, and on a mobile browser that includes
+ * every collapse and expansion of the address bar, which would put a full-screen
+ * turbulence pass on the scroll path.
+ *
+ * The watermark cannot be done that way. An SVG referenced as an image renders
+ * in an isolated document with no access to the page's webfonts, so a wordmark
+ * drawn as a background-image would silently come out in a generic family. It
+ * is inline SVG in Ground.tsx for that reason and no other.
+ *
+ * Nothing here animates, transitions or hints at compositing. The decoration is
+ * meant to be ignorable, and motion is the opposite of ignorable.
+ */
+
+.ground {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+
+  /* Behind the content and out of its way in every sense: a click that lands
+     here belongs to whatever is underneath. */
+  pointer-events: none;
+
+  /* The flat --ground fill is on the document rather than here, so that this
+     whole element can be dropped without anything underneath it changing. */
+}
+
+.ground__grain,
+.ground__mark {
+  position: absolute;
+  inset: 0;
+}
+
+.ground__grain {
+  /*
+   * Greyscale fractal noise, tiled. The alpha is what keeps the composite
+   * inside the band --ground-grain-lo and --ground-grain-hi declare: the noise
+   * runs the full range from black to white, so the red channel is the binding
+   * constraint and anything above roughly 2% would push the ground lighter than
+   * --ground-grain-hi. contrast.spec.ts samples the rendered pixels and fails
+   * if it does, because the "on ground, worst case" rows of the contrast matrix
+   * are computed against exactly that value.
+   */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 160px 160px;
+  opacity: 0.018;
+}
+
+.ground__mark {
+  width: 100%;
+  height: 100%;
+}
+
+.ground__wordmark {
+  font-family: var(--font-display);
+
+  /*
+   * Smaller than any heading on any page. FR-003: the wordmark is texture, and
+   * texture that is the largest text on the page has stopped being texture and
+   * started competing with the thing a visitor came to read.
+   */
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: 0.28em;
+
+  /*
+   * Filled at the lightest point the band allows, held just under it. The
+   * watermark paints over the grain, so the two cannot add up past the ceiling.
+   */
+  fill: var(--ground-grain-hi);
+  fill-opacity: 0.9;
+}
+
+/*
+ * Three ways the decoration goes away, and one outcome.
+ *
+ * The whole container is dropped rather than the grain and the watermark
+ * separately, and that is the point rather than a shortcut: it makes the
+ * deliberate case and the failure case identical. Asked for, forced, or simply
+ * never rendered, what remains is the flat --ground fill on the document, so
+ * there is one plain ground to have got right instead of three.
+ *
+ * forced-colors also silently discards most background-image declarations, so
+ * the grain would half-vanish on its own and leave the watermark behind. It is
+ * dropped explicitly rather than left to that.
+ */
+@media (prefers-contrast: more) {
+  .ground {
+    display: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .ground {
+    display: none;
+  }
+}

@@ -1,0 +1,205 @@
+/*
+ * Everything that is true of every page: the typefaces, the document itself,
+ * reversed-text typography, the focus indicator, and the session menu that
+ * root.tsx renders on every route.
+ *
+ * Reads from tokens.css and declares no value of its own.
+ */
+
+/* --- Typefaces ----------------------------------------------------------- */
+
+/*
+ * Both faces are one variable font each, served from this origin, with the
+ * weight axis intact so 100 to 900 interpolates without a second file.
+ *
+ * font-display: swap on both. A face that is still arriving must never leave a
+ * page with empty space where its words should be; the fallback below is
+ * metric-matched precisely so that the swap, when it comes, changes letterforms
+ * without moving a single line.
+ */
+
+@font-face {
+  font-family: 'Fixel Text';
+  src: url('/fonts/fixel-text.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Fixel Display';
+  src: url('/fonts/fixel-display.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/*
+ * The metric-matched fallback. The overrides are computed rather than guessed:
+ * Fixel is 1000 units per em with an x-height of 520, an ascender of 900, a
+ * descender of 190 and a line gap of 290; Arial and its metric-compatible
+ * substitutes are 2048 units per em with an x-height of 1082. size-adjust
+ * brings the two x-heights into line at 98.4252%, and the other three
+ * overrides are Fixel's own vertical metrics divided by that adjustment, so a
+ * line box is the same height before and after the swap.
+ *
+ * One fallback serves both faces. Fixel Text and Fixel Display are the two ends
+ * of the same width axis, so they share an x-height and every vertical metric;
+ * only the advance widths differ, and no override can match those anyway.
+ */
+@font-face {
+  font-family: 'Fixel Fallback';
+  src: local('Arial'), local('Liberation Sans'), local('Helvetica Neue'), local('Arimo');
+  size-adjust: 98.4252%;
+  ascent-override: 91.4401%;
+  descent-override: 19.304%;
+  line-gap-override: 29.464%;
+  /* Nothing is fetched for a local() face, so this changes no behaviour. It is
+     declared so that "every face on the page swaps" is a claim a test can make
+     about every face rather than about a subset of them. */
+  font-display: swap;
+}
+
+/* --- The document -------------------------------------------------------- */
+
+:root {
+  /*
+   * Declaring the scheme is what stops native fields, buttons, scrollbars and
+   * the form controls the account screens are built from rendering in the
+   * platform's light defaults on top of a dark page.
+   */
+  color-scheme: dark;
+
+  /*
+   * The flat fill, on the document rather than on the decorative layer, so it
+   * is what shows whenever that layer is absent: dropped under increased
+   * contrast, dropped under forced colours, or simply failed to render. All
+   * three cases then look the same, and all three are legible.
+   */
+  background-color: var(--ground);
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-text);
+  font-size: var(--text-base);
+  color: var(--text);
+
+  /*
+   * Light text on a dark ground blooms: the strokes spread into the background
+   * and letters close up. Opening the line and letter spacing is the cheapest
+   * correction, and for a reader with astigmatism it is the difference between
+   * tiring and painful.
+   */
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+
+  /* Reversed text also over-thickens under synthetic smoothing. */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  color: var(--heading);
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+a {
+  color: var(--link);
+}
+
+/* --- Focus --------------------------------------------------------------- */
+
+/*
+ * One rule, no selector list, every focusable element on the site.
+ *
+ * Unscoped is the entire point. The rules this replaces named .account,
+ * .session-menu and a handful of catalogue selectors, which meant anything
+ * focusable outside those lists fell back to the user agent's ring: on this
+ * navy that is a dark blue against a dark blue and fails 3:1 outright. --focus
+ * is a colour nothing else on the page uses, and it clears 3:1 against both
+ * surfaces and against the lightest point the grain reaches.
+ */
+:focus-visible {
+  outline: var(--focus-width) solid var(--focus);
+  outline-offset: var(--focus-offset);
+}
+
+/*
+ * Forced colours replaces the palette wholesale, so the indicator is redeclared
+ * in system colours to survive it. An outline survives forced colours where a
+ * box-shadow ring would vanish entirely, which is why the indicator is an
+ * outline in the first place.
+ */
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: var(--focus-width) solid Highlight;
+    outline-offset: var(--focus-offset);
+  }
+}
+
+/* --- The session menu ---------------------------------------------------- */
+
+/*
+ * Lives here, not in account.css, because root.tsx renders it on every route
+ * while account.css is imported only by the five account screens. Declared over
+ * there, it had no layout at all on the catalogue, book, search and not-found
+ * pages, and its links had no focus indicator on any of them.
+ */
+.session-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--border-structural);
+}
+
+/* The menu is on every page, so its links are among the most-used targets on
+   the site. They had no layout at all outside the account screens until this
+   block moved here. */
+.session-menu a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+}
+
+.session-menu button {
+  font: inherit;
+  font-size: var(--text-base);
+  min-height: var(--target-min);
+  padding: var(--space-1) var(--space-3);
+  color: var(--text);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-sm);
+}
+
+/* --- Live regions -------------------------------------------------------- */
+
+/*
+ * Also shared rather than account-only: the session menu carries one on every
+ * page, which is how signing out is announced as well as shown.
+ */
+.status {
+  margin: var(--space-4) 0;
+  line-height: 1.5;
+}
+
+/* An empty live region must take no space, or every page carries a gap where
+   nothing has happened yet. */
+.status:empty {
+  margin: 0;
+}
+
+.status--alert {
+  color: var(--danger);
+}

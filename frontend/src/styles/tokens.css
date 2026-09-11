@@ -1,0 +1,122 @@
+/*
+ * Every visual decision this site makes, named once and defined here.
+ *
+ * This is the only stylesheet allowed to contain a colour literal, a raw
+ * spacing value or a font stack. `frontend/scripts/check-design-tokens.mjs`
+ * runs in `pnpm lint` and rejects any of those appearing anywhere else, and it
+ * recomputes every constrained pair below from these values rather than
+ * trusting the table in `specs/003-visual-identity/data-model.md`.
+ *
+ * A colour role names what a colour is *for*, never what it is, so the value
+ * can change without every call site changing meaning.
+ */
+
+:root {
+  /* --- Colour roles ------------------------------------------------------ */
+
+  /* The flat fill under everything, and the whole ground under increased
+     contrast. Never holds text directly if a region can hold it instead. */
+  --ground: #070d22;
+
+  /* The band the grain is permitted to move within. These two are declarations
+     of a limit, not paint: contrast.spec.ts samples the rendered ground and
+     fails if the observed luminance leaves this band, and the "on ground" rows
+     of the contrast matrix are computed against -hi because the lightest point
+     the grain reaches is the worst case for light text. */
+  --ground-grain-lo: #04081a;
+  --ground-grain-hi: #0c1533;
+
+  /* Regions. Fully opaque, and that is load-bearing rather than aesthetic:
+     axe resolves what is behind a text node by walking the stack of elements
+     covering it and stopping at the first opaque one, treating a
+     background-image as a stop that marks the result *incomplete*. A region at
+     95% alpha looks identical and lets that walk reach the textured ground, at
+     which point every colour-contrast result on the page silently turns from
+     pass to incomplete and the suite stays green while checking nothing. The
+     lint script rejects an alpha channel on either of these. */
+  --surface: #1a2654;
+  --surface-raised: #25336c;
+
+  /* Text. --text is deliberately off pure white: reversed text on a dark ground
+     blooms, which is painful rather than merely untidy for a reader with
+     astigmatism. */
+  --text: #e4e8f7;
+  --text-muted: #afb8dc;
+  --heading: #f0f3fc;
+  --link: #9cc7ff;
+
+  /* The focus indicator, and nothing else on the page. Its whole value is that
+     nothing else is this colour, so a ring is unmistakable wherever it lands. */
+  --focus: #ffc857;
+
+  /* The text of a rejected field or a failed action. Never the only signal that
+     something failed: a word says so as well. */
+  --danger: #ff9aa8;
+
+  /* Two border roles, because only one of them carries meaning. A region is
+     delineated by its fill, so its outline is decoration over something that
+     already reads as an edge. A control is different in kind: on a text field
+     the boundary is the affordance and nothing else says where the field is,
+     so --border-control is held above 3:1 against both surfaces. */
+  --border-structural: #2b3768;
+  --border-control: #7684c6;
+
+  /* --- Spacing scale ----------------------------------------------------- */
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-8: 3rem;
+  --space-12: 4rem;
+
+  /* --- Type scale -------------------------------------------------------- */
+
+  --text-xs: 0.8125rem;
+  --text-sm: 0.9375rem;
+  /* Stays at 1rem, which is 16px. Below that iOS zooms the page when a field
+     takes focus and leaves a screen magnifier user somewhere they did not ask
+     to be. */
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.75rem;
+  --text-2xl: 2.25rem;
+
+  /* --- Corners and elevation --------------------------------------------- */
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+
+  /* Elevation on a dark ground comes from a deeper shadow than it would on
+     white, because there is less room below the surface to darken into. */
+  --shadow-region: 0 1px 2px rgb(2 5 15 / 50%), 0 8px 24px rgb(2 5 15 / 35%);
+  --shadow-raised: 0 1px 2px rgb(2 5 15 / 45%);
+
+  /* --- Typefaces --------------------------------------------------------- */
+
+  /* 'Fixel Fallback' is declared in base.css with size-adjust, ascent-override,
+     descent-override and line-gap-override tuned so that the swap changes
+     letterforms without moving lines. */
+  --font-text: 'Fixel Text', 'Fixel Fallback', Arial, Helvetica, sans-serif;
+  --font-display: 'Fixel Display', 'Fixel Fallback', Arial, Helvetica, sans-serif;
+
+  /* --- Measure ----------------------------------------------------------- */
+
+  /*
+   * How wide a passage of running text is allowed to get. Not a spacing step
+   * and not on the scale: it is a decision about how far the eye travels before
+   * it has to find the start of the next line, which is why it is named rather
+   * than repeated at each of the three places that hold prose.
+   */
+  --measure-prose: 45rem;
+
+  /* --- Thresholds -------------------------------------------------------- */
+
+  /* Not steps on a scale. Each is a floor a requirement names. */
+  --target-min: 44px;
+  --focus-width: 3px;
+  --focus-offset: 2px;
+}

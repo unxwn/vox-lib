@@ -4,37 +4,48 @@
  * text from assistive technology: no fixed heights that cut a wrapped line off,
  * no overflow: hidden over live text, and no truncation that leaves a screen
  * reader reading a fragment the eye cannot finish.
+ *
+ * Every value here comes from tokens.css. A colour literal in this file fails
+ * `pnpm lint`, and so does a reference to a token that does not exist, which is
+ * how the two `var(--border)` declarations this file used to carry were found:
+ * nothing defined it, so the browser fell back to currentColor and drew a
+ * border nobody had chosen.
  */
 
+/*
+ * The region. Content sits on an opaque fill above the ground, with the ground
+ * visible around it, which is what makes it read as a delineated area rather
+ * than as text floating on a texture.
+ *
+ * Opaque is not a preference. Axe stops resolving what is behind a text node at
+ * the first opaque element and treats a background-image as a stop it cannot
+ * read, so a translucent region here would turn every contrast result on the
+ * page from pass to incomplete without failing anything.
+ */
 .catalogue {
-  margin: 0 auto;
+  margin: var(--space-5) auto;
   max-width: 60rem;
-  padding: 1.5rem 1rem 4rem;
+  padding: var(--space-5) var(--space-5) var(--space-8);
+  background-color: var(--surface);
+  border: 1px solid var(--border-structural);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-region);
 }
 
 .catalogue__heading {
-  margin: 0 0 0.5rem;
-  font-size: 1.75rem;
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-xl);
   line-height: 1.2;
 }
 
-/* The heading takes focus on a page change, so the outline has to be visible. */
-.catalogue__heading:focus-visible,
-.catalogue__link:focus-visible,
-.pagination a:focus-visible,
-.state button:focus-visible {
-  outline: 3px solid currentColor;
-  outline-offset: 3px;
-}
-
 .catalogue__position {
-  margin: 0 0 1.5rem;
-  color: inherit;
+  margin: 0 0 var(--space-5);
+  color: var(--text-muted);
 }
 
 .catalogue__list {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-4);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -43,7 +54,7 @@
 
 .catalogue__item {
   display: flex;
-  gap: 0.75rem;
+  gap: var(--space-3);
   align-items: flex-start;
   /* min-width: 0 lets a grid item shrink below its content, which is what allows
      a very long unbroken title to wrap instead of forcing the row wider. */
@@ -53,7 +64,7 @@
 .catalogue__link {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: var(--space-1);
   min-width: 0;
 }
 
@@ -66,6 +77,7 @@
 }
 
 .catalogue__authors {
+  color: var(--text-muted);
   overflow-wrap: anywhere;
 }
 
@@ -74,46 +86,108 @@
   width: 3.5rem;
   height: 5rem;
   object-fit: cover;
-  border-radius: 0.25rem;
+  border-radius: var(--radius-sm);
 }
 
+/*
+ * A book with no cover. This used to be black at 4 and 6 percent alpha, which
+ * was a faint grey tint on white and is nothing at all on navy: on this ground
+ * it would have been an empty hole exactly where a cover should be.
+ *
+ * The hatching is drawn in --border-control rather than --border-structural,
+ * which is the role its edge uses. --border-structural against a raised surface
+ * is 1.02:1, so the stripes would be invisible and the placeholder would be a
+ * plain block; FR-007 asks for 3:1 against what is adjacent, and the control
+ * boundary role is the only one in the palette that reaches it.
+ */
 .cover-art--placeholder {
   display: block;
   background:
     repeating-linear-gradient(
       45deg,
-      rgb(0 0 0 / 6%),
-      rgb(0 0 0 / 6%) 6px,
-      transparent 6px,
-      transparent 12px
+      var(--border-control),
+      var(--border-control) 2px,
+      transparent 2px,
+      transparent 10px
     ),
-    rgb(0 0 0 / 4%);
+    var(--surface-raised);
+  border: 1px solid var(--border-structural);
 }
 
+/*
+ * Loading, empty and error. Each one is the only thing on the page when it
+ * shows, so it is given a region of its own rather than being left as a line of
+ * text stranded in the middle of a card.
+ */
 .state {
-  margin: 1rem 0;
+  margin: var(--space-4) 0;
+  padding: var(--space-4);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-structural);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-raised);
+}
+
+.state p {
+  margin: 0 0 var(--space-2);
+}
+
+.state p:last-child {
+  margin-bottom: 0;
+}
+
+.state--error {
+  border-color: var(--danger);
 }
 
 .pagination {
-  margin-top: 2rem;
+  margin-top: var(--space-6);
 }
 
 .pagination__list {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-2);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+/*
+ * Every page number is its own target, and they sit side by side, so these are
+ * the easiest links on the site to miss with a thumb. They used to be about 30
+ * pixels tall: a bare number in 0.4rem of padding.
+ *
+ * The size comes from padding and a centred flex box rather than from a
+ * min-height alone, so the hit area grows with the content instead of the text
+ * sitting in the middle of a target that stops where the text does.
+ */
 .pagination a {
-  display: inline-block;
-  padding: 0.4rem 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--target-min);
+  min-height: var(--target-min);
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-structural);
+  border-radius: var(--radius-sm);
+}
+
+/* The current page is a link to itself, and has to look different from the
+   others by more than colour, so it carries the control boundary. */
+.pagination a[aria-current='page'] {
+  border-color: var(--border-control);
+  font-weight: 600;
 }
 
 .pagination__gap {
-  padding: 0.4rem 0.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--target-min);
+  min-height: var(--target-min);
+  color: var(--text-muted);
 }
 
 /*
@@ -123,19 +197,21 @@
  */
 
 .book__authors {
-  margin: 0 0 1.5rem;
+  margin: 0 0 var(--space-5);
+  color: var(--text-muted);
 }
 
 .book__label {
   font-weight: 600;
+  color: var(--text);
 }
 
 .book__summary {
   display: flex;
-  gap: 1rem;
+  gap: var(--space-4);
   align-items: flex-start;
   flex-wrap: wrap;
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--space-5);
 }
 
 /* The cover is larger here than in the list: this is the book's own page. */
@@ -146,7 +222,7 @@
 
 .book__facts {
   display: grid;
-  gap: 0.5rem 1.5rem;
+  gap: var(--space-2) var(--space-5);
   grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
   margin: 0;
   min-width: 0;
@@ -154,6 +230,7 @@
 
 .book__facts dt {
   font-weight: 600;
+  color: var(--text-muted);
 }
 
 .book__facts dd {
@@ -161,36 +238,37 @@
 }
 
 .book__section {
-  margin: 2rem 0 0.75rem;
-  font-size: 1.25rem;
+  margin: var(--space-6) 0 var(--space-3);
+  font-size: var(--text-lg);
   line-height: 1.3;
 }
 
 .book__description {
   margin: 0;
-  max-width: 45rem;
+  max-width: var(--measure-prose);
   overflow-wrap: anywhere;
 }
 
 .book__listening {
-  margin: 2rem 0 1.5rem;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: 0.25rem;
-  max-width: 45rem;
+  margin: var(--space-6) 0 var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-structural);
+  border-radius: var(--radius-md);
+  max-width: var(--measure-prose);
 }
 
 .chapters__list {
   margin: 0;
-  padding-left: 1.5rem;
+  padding-left: var(--space-5);
   display: grid;
-  gap: 0.5rem;
-  max-width: 45rem;
+  gap: var(--space-2);
+  max-width: var(--measure-prose);
 }
 
 .chapters__item {
   display: flex;
-  gap: 1rem;
+  gap: var(--space-4);
   justify-content: space-between;
   align-items: baseline;
   min-width: 0;
@@ -202,6 +280,7 @@
 
 .chapters__duration {
   flex: 0 0 auto;
+  color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }
 
@@ -209,47 +288,84 @@
    lines on a narrow screen rather than shrinking the field to nothing. */
 
 .catalogue__search-link {
-  margin: 0 0 1rem;
+  margin: 0 0 var(--space-4);
 }
 
 .search__form {
-  margin: 0 0 1.5rem;
+  margin: 0 0 var(--space-5);
   max-width: 40rem;
 }
 
 .search__label {
   display: block;
-  margin-bottom: 0.35rem;
+  margin-bottom: var(--space-1);
   font-weight: 600;
 }
 
 .search__controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .search__input {
   flex: 1 1 14rem;
   min-width: 0;
-  padding: 0.45rem 0.6rem;
+  min-height: var(--target-min);
+  padding: var(--space-2) var(--space-3);
   font: inherit;
-  border: 1px solid var(--border);
-  border-radius: 0.25rem;
+  /* Never below 16px: iOS zooms the page when a smaller field takes focus, and
+     leaves a screen magnifier user somewhere they did not ask to be. */
+  font-size: var(--text-base);
+  color: var(--text);
+  background-color: var(--surface-raised);
+  /* The boundary is the affordance here. Nothing else says where the field is,
+     which is why this is --border-control and not --border-structural. */
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-sm);
+}
+
+.search__input::placeholder {
+  color: var(--text-muted);
 }
 
 .search__controls button {
-  padding: 0.45rem 1rem;
   font: inherit;
-}
-
-.search__input:focus-visible,
-.search__controls button:focus-visible,
-.catalogue__search-link a:focus-visible {
-  outline: 3px solid currentColor;
-  outline-offset: 3px;
+  font-size: var(--text-base);
+  min-height: var(--target-min);
+  padding: var(--space-2) var(--space-4);
+  color: var(--text);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-sm);
 }
 
 .search__prompt {
   margin: 0;
+}
+
+.state button {
+  font: inherit;
+  font-size: var(--text-base);
+  min-height: var(--target-min);
+  padding: var(--space-2) var(--space-4);
+  color: var(--text);
+  background-color: var(--surface);
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-sm);
+}
+
+/*
+ * Every standalone link inside the region: the way onward from an empty state,
+ * the way back from the not-found page, the way into search.
+ *
+ * A rule this broad is only safe because no link on this site sits inside a
+ * sentence. WCAG 2.5.8 exempts an inline one, and adding the first inline link
+ * means writing that exemption in here deliberately rather than meeting it as a
+ * failing test.
+ */
+.catalogue p a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
 }
