@@ -79,6 +79,39 @@ pnpm lint     # oxlint
     | jq -r '.annotations["dev.containers.metadata"]' | jq .options
   ```
 
+- **axe stops checking contrast at the first `background-image`, and says so as
+  `incomplete` rather than as a failure.** To find what is behind a text node it walks
+  the elements covering it and stops at the first opaque one; a `background-image` is a
+  stop it cannot read, so the result is downgraded from pass to incomplete. Incomplete is
+  neither critical nor serious, so a suite that counts violations stays green while
+  checking nothing. Since `003-visual-identity` put a decorated ground behind every page,
+  any region that loses its opacity has exactly that effect and looks identical on screen.
+  `frontend/tests/a11y/contrast.spec.ts` asserts zero `color-contrast` incompletes for
+  this reason; if it fires, find the translucent region rather than relaxing it.
+
+- **An SVG referenced as an image cannot reach the page's webfonts.** It renders in an
+  isolated document, so a wordmark drawn as a `background-image`, an `<img>` or `content`
+  silently comes out in a fallback family with nothing visibly wrong. That is why the
+  watermark in `frontend/src/components/Ground.tsx` is inline SVG and has to stay inline
+  SVG. The grain has no such constraint and is a data URI tile.
+
+- **axe's contrast rule is meaningless under `forced-colors: active`.** Chromium forces
+  `color` to a system colour but leaves `-webkit-text-fill-color` at the author's value,
+  and axe reads the foreground from the second in preference to the first. Asked about the
+  same heading in the same state, the browser says `rgb(0, 0, 0)` and axe says `#f0f3fc`.
+  It will report a violation for every piece of text on any dark-themed site.
+  `high-contrast.spec.ts` disables `color-contrast` in that mode only, and proves the
+  contrast obligation under `prefers-contrast: more`, where the two agree.
+
+- **The `react-router dev` server caches its `critical.css` bundle and does not invalidate
+  it when a stylesheet changes.** A fresh page load keeps getting the old CSS, so a
+  Playwright run reports failures for rules that are already correct on disk. Check with
+  `curl -s "http://localhost:5173/@react-router/critical.css?pathname=/" | grep <a rule you
+just added>`, and restart the dev server rather than hunting the CSS. Touching the file
+  does not help. Unrelated but adjacent: after adding an import, Vite can answer with
+  `504 (Outdated Optimize Dep)`, which leaves client-rendered routes blank while the
+  prerendered ones look fine; that is also a restart.
+
 ## What this project is
 
 **vox-lib is an audiobook library website.** It is intended to grow into a real,
