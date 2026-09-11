@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "react-router dev",
     "build": "react-router typegen && tsc -b && react-router build",
-    "lint": "oxlint",
+    "lint": "oxlint && node scripts/check-design-tokens.mjs",
     "preview": "vite preview",
     "test:a11y": "playwright test",
     "gen:api-types": "openapi-typescript http://localhost:5080/openapi/v1.json -o src/api/schema.d.ts"

@@ -3,106 +3,144 @@
  * is leaving the browser's own behaviour alone: no rule removes an outline, no
  * rule hides text from assistive technology, and nothing depends on colour
  * alone to say that a field was rejected.
+ *
+ * The one thing the restyle adds to that list is that the native controls now
+ * sit on a dark ground, which is why base.css declares color-scheme: dark. A
+ * field left to the platform's light defaults on this page would be a white box
+ * with black text in the middle of a navy card, and its own focus ring would be
+ * drawn for a background it is not on.
  */
 
+/*
+ * The region, opaque, with the ground visible around it. See catalogue.css for
+ * why the opacity is not a preference.
+ */
 .account {
-  margin: 0 auto;
+  margin: var(--space-5) auto;
   max-width: 34rem;
-  padding: 1.5rem 1rem 4rem;
+  padding: var(--space-5) var(--space-5) var(--space-8);
+  background-color: var(--surface);
+  border: 1px solid var(--border-structural);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-region);
 }
 
 .account__heading {
-  margin: 0 0 0.75rem;
-  font-size: 1.75rem;
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-xl);
   line-height: 1.2;
 }
 
 .account__intro {
-  margin: 0 0 1.5rem;
+  margin: 0 0 var(--space-5);
   line-height: 1.5;
 }
 
 .account__form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: var(--space-5);
 }
 
 .account__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: var(--space-4);
   align-items: center;
 }
 
 .account__links {
-  margin-top: 1.5rem;
+  margin-top: var(--space-5);
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+/* Each of these is a whole link rather than a link inside a sentence, so the
+   target can be the whole of it without swallowing surrounding text. */
+.account__links a,
+.account p a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: var(--space-1);
 }
 
 .field__label {
   font-weight: 600;
+  color: var(--text);
 }
 
+/*
+ * The hint carries the password policy, which is a rule a person has to meet
+ * rather than an aside. It is set in the muted role, which clears 4.5:1 on this
+ * surface at any size, and not below the small step of the type scale.
+ */
 .field__hint {
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   line-height: 1.4;
+  color: var(--text-muted);
 }
 
 .field__input {
-  /* 16px or more, so iOS does not zoom the page when the field takes focus and
-     leave a screen magnifier user somewhere they did not ask to be. */
-  font-size: 1rem;
-  padding: 0.6rem 0.7rem;
-  border: 1px solid currentColor;
-  border-radius: 0.25rem;
+  /* Never below 16px: iOS zooms the page when a smaller field takes focus and
+     leaves a screen magnifier user somewhere they did not ask to be. */
+  font-size: var(--text-base);
+  font-family: inherit;
+  min-height: var(--target-min);
+  padding: var(--space-2) var(--space-3);
+  color: var(--text);
+  background-color: var(--surface-raised);
+  /* On a text field the boundary is the affordance: nothing else says where the
+     field is. That is what --border-control exists for, and why it is the one
+     border role held above 3:1 against both surfaces. */
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-sm);
+}
+
+.field__input::placeholder {
+  color: var(--text-muted);
 }
 
 /* Rejected fields are marked by a word as well as by a border, because colour
    and thickness alone are not available to every reader. */
 .field__input[aria-invalid='true'] {
   border-width: 2px;
+  border-color: var(--danger);
 }
 
 .field__error {
   margin: 0;
   font-weight: 600;
+  color: var(--danger);
 }
 
 .field__error::before {
   content: 'Помилка: ';
 }
 
-.status {
-  margin: 1rem 0;
-  line-height: 1.5;
+.account__actions button {
+  font: inherit;
+  font-size: var(--text-base);
+  min-height: var(--target-min);
+  padding: var(--space-2) var(--space-4);
+  color: var(--text);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-sm);
 }
 
-.status:empty {
-  margin: 0;
-}
-
-/* A visible focus indicator on everything focusable. FR-030, and it is the
-   whole reason this block exists rather than being left to the user agent,
-   which some resets remove. */
-.account :focus-visible,
-.session-menu :focus-visible {
-  outline: 3px solid currentColor;
-  outline-offset: 2px;
-}
-
-.session-menu {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  align-items: center;
-  padding: 0.75rem 1rem;
+/*
+ * A disabled control still has to be readable: it says what the button would
+ * do, and a person waiting for a request to finish is exactly who needs to read
+ * it. So this dims the boundary, not the words.
+ */
+.account__actions button:disabled {
+  border-color: var(--border-structural);
 }
