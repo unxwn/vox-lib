@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,14 +33,18 @@ public abstract class ApiFixture : IAsyncLifetime
 
     public string ConnectionString { get; }
 
-    public HttpClient CreateClient() =>
-        (_factory ?? throw new InvalidOperationException("The fixture has not started."))
-            .CreateClient();
+    public HttpClient CreateClient() => Factory.CreateClient();
+
+    protected WebApplicationFactory<Program> Factory =>
+        _factory ?? throw new InvalidOperationException("The fixture has not started.");
 
     public async Task InitializeAsync()
     {
         _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-            builder.UseSetting(DatabaseConnection.EnvironmentVariable, ConnectionString));
+        {
+            builder.UseSetting(DatabaseConnection.EnvironmentVariable, ConnectionString);
+            ConfigureHost(builder);
+        });
 
         // The host is built lazily, and building it is what creates the database,
         // migrates it and seeds it. Ask for a client so that has all happened
@@ -73,4 +78,14 @@ public abstract class ApiFixture : IAsyncLifetime
     /// that needs the catalogue in some other state.
     /// </summary>
     protected virtual Task PrepareAsync(VoxLibDbContext database) => Task.CompletedTask;
+
+    /// <summary>
+    /// For a fixture that has to change a setting or replace a service before
+    /// the application starts. The accounts harness uses it to substitute the
+    /// mail sender, which is the one boundary that cannot be exercised for real
+    /// in a test.
+    /// </summary>
+    protected virtual void ConfigureHost(IWebHostBuilder builder)
+    {
+    }
 }

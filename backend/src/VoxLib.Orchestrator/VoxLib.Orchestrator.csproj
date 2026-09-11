@@ -7,6 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Abstractions only. A message that could not be delivered is swallowed on
+         purpose, per FR-005, so it has to be recorded somewhere or nobody would
+         ever learn that mail is down. -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\VoxLib.Model\VoxLib.Model.csproj" />
   </ItemGroup>
 

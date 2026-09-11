@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- System.Net.Mail.SmtpClient has been obsolete since .NET 5 and Microsoft's
+         own documentation points at MailKit by name. -->
+    <PackageReference Include="MailKit" Version="4.17.0" />
+    <!-- Options and logging only. This project speaks to the outside world; it
+         does not know what an endpoint or a database is. -->
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VoxLib.Model\VoxLib.Model.csproj" />
+  </ItemGroup>
+
+</Project>

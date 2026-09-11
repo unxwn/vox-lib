@@ -1,0 +1,108 @@
+/*
+ * The account screens. Everything here is a native control, so most of the work
+ * is leaving the browser's own behaviour alone: no rule removes an outline, no
+ * rule hides text from assistive technology, and nothing depends on colour
+ * alone to say that a field was rejected.
+ */
+
+.account {
+  margin: 0 auto;
+  max-width: 34rem;
+  padding: 1.5rem 1rem 4rem;
+}
+
+.account__heading {
+  margin: 0 0 0.75rem;
+  font-size: 1.75rem;
+  line-height: 1.2;
+}
+
+.account__intro {
+  margin: 0 0 1.5rem;
+  line-height: 1.5;
+}
+
+.account__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.account__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+
+.account__links {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field__label {
+  font-weight: 600;
+}
+
+.field__hint {
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.field__input {
+  /* 16px or more, so iOS does not zoom the page when the field takes focus and
+     leave a screen magnifier user somewhere they did not ask to be. */
+  font-size: 1rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid currentColor;
+  border-radius: 0.25rem;
+}
+
+/* Rejected fields are marked by a word as well as by a border, because colour
+   and thickness alone are not available to every reader. */
+.field__input[aria-invalid='true'] {
+  border-width: 2px;
+}
+
+.field__error {
+  margin: 0;
+  font-weight: 600;
+}
+
+.field__error::before {
+  content: 'Помилка: ';
+}
+
+.status {
+  margin: 1rem 0;
+  line-height: 1.5;
+}
+
+.status:empty {
+  margin: 0;
+}
+
+/* A visible focus indicator on everything focusable. FR-030, and it is the
+   whole reason this block exists rather than being left to the user agent,
+   which some resets remove. */
+.account :focus-visible,
+.session-menu :focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 2px;
+}
+
+.session-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.75rem 1rem;
+}

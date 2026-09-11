@@ -28,12 +28,23 @@ The Vite dev server proxies `/api`, `/health` and `/openapi` to the API on port
 5080, so the browser only ever talks to one origin and there are no CORS
 preflights in development.
 
-| URL                                       | What                                |
-| ----------------------------------------- | ----------------------------------- |
-| http://localhost:5173                     | React app                           |
-| http://localhost:5080/health              | API liveness probe                  |
-| http://localhost:5080/api/weatherforecast | Sample endpoint the React app calls |
-| http://localhost:5080/openapi/v1.json     | OpenAPI 3.1 document                |
+Accounts need somewhere for mail to go, because an address has to be confirmed
+before anyone can sign in. Mailpit runs in the dev container for that; nothing in
+development reaches a real address. Rebuild the container once after pulling the
+accounts feature, or registering will fail at the moment it sends a message.
+
+The account screens are **not** prerendered, unlike the catalogue: they are
+personal to one person and there is no fixed document to emit. The build writes
+`frontend/build/client/__spa-fallback.html` for them, and whatever serves the
+built frontend has to answer unknown paths with that file rather than a 404.
+
+| URL                                       | What                                 |
+| ----------------------------------------- | ------------------------------------ |
+| http://localhost:5173                     | React app                            |
+| http://localhost:5080/health              | API liveness probe                   |
+| http://localhost:5080/api/weatherforecast | Sample endpoint the React app calls  |
+| http://localhost:5080/openapi/v1.json     | OpenAPI 3.1 document                 |
+| http://localhost:8025                     | Mailpit, where development mail goes |
 
 `backend/src/VoxLib.Api/VoxLib.Api.http` has ready-made requests (REST Client extension).
 

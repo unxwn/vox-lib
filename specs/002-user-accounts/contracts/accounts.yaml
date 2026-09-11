@@ -1,0 +1,532 @@
+openapi: 3.1.0
+info:
+  title: vox-lib accounts and sessions
+  version: '1.0'
+  description: >
+    Registering, confirming an address, signing in, recovering a password and signing out.
+    The session is an HttpOnly cookie set and cleared by these endpoints; no response in this
+    contract carries a token the page can read, and no endpoint returns audio, a link to
+    audio, or a storage key.
+
+    Two rules govern every response below and are worth reading before the paths. First, no
+    response, and no measurable difference in the time taken to produce one, reveals whether an
+    address has an account, except once the correct password for that account has been
+    supplied. That is why registering and requesting recovery always succeed, and why an
+    unknown address and a wrong password give the same 401. Second, every state-changing
+    request carries the antiforgery token from /api/account/antiforgery-token in the
+    X-XSRF-TOKEN header, because the session cookie is attached by the browser automatically.
+
+    Every message this API sends, and every message string in a problem response, is Ukrainian.
+
+servers:
+  - url: /
+    description: Same origin. The browser reaches these paths through the dev server proxy.
+
+paths:
+  /api/account/antiforgery-token:
+    get:
+      summary: Obtain the antiforgery token for this browser
+      description: >
+        Sets the antiforgery cookie pair and writes the request token into a readable
+        XSRF-TOKEN cookie. Every state-changing endpoint in this contract requires that token
+        echoed in the X-XSRF-TOKEN header. Anonymous, because registering and signing in are
+        state-changing requests made by someone with no session, and login is itself a target
+        of the attack this guards against.
+      operationId: getAntiforgeryToken
+      security: []
+      responses:
+        '204':
+          description: The token cookie is set. There is no body.
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+              description: XSRF-TOKEN, readable by the page, plus the paired antiforgery cookie.
+            X-Robots-Tag:
+              $ref: '#/components/headers/NoIndex'
+
+  /api/account/password-policy:
+    get:
+      summary: What a password must satisfy
+      description: >
+        FR-002 requires the requirements to be available before the form is submitted, not
+        only after a failure. Served from the same values the API configures Identity with, so
+        the sentence the person reads and the rule that rejects them cannot drift apart.
+      operationId: getPasswordPolicy
+      security: []
+      responses:
+        '200':
+          description: The policy in force.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasswordPolicy'
+          headers:
+            X-Robots-Tag:
+              $ref: '#/components/headers/NoIndex'
+
+  /api/account/registrations:
+    post:
+      summary: Create an account
+      description: >
+        Always answers 202 when the submission is well formed, whether the address was new or
+        already had an account. A new address is sent a confirmation link; an address that
+        already has an account is sent a message saying so and offering recovery. Submitting
+        the same registration more than once leaves exactly one account. The account cannot be
+        signed in to until the address is confirmed.
+      operationId: register
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/AntiforgeryHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequest'
+      responses:
+        '202':
+          description: >
+            Accepted. A message has been sent to the address. This is the only success
+            response, and it is byte-identical for a new address and one that already has an
+            account.
+          headers:
+            X-Robots-Tag:
+              $ref: '#/components/headers/NoIndex'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /api/account/confirmation-requests:
+    post:
+      summary: Ask for another confirmation message
+      description: >
+        For a person whose message never arrived or has expired. Always answers 202, for the
+        same reason registering does. Limited per address, so the endpoint cannot be used to
+        send mail repeatedly to someone who did not ask for it.
+      operationId: requestConfirmation
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/AntiforgeryHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailOnlyRequest'
+      responses:
+        '202':
+          description: Accepted. If the address has an unconfirmed account, a message has been sent.
+          headers:
+            X-Robots-Tag:
+              $ref: '#/components/headers/NoIndex'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /api/account/confirmations:
+    post:
+      summary: Confirm an address by redeeming the link that was sent to it
+      description: >
+        Called by the frontend route the link points at. An address that is already confirmed
+        answers 200 with outcome alreadyConfirmed rather than an error, because following a
+        link twice is not a mistake. A link past its lifetime answers 410, and the person is
+        offered a replacement.
+      operationId: confirmEmail
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/AntiforgeryHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRequest'
+      responses:
+        '200':
+          description: The address is confirmed, now or already.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfirmationResult'
+          headers:
+            X-Robots-Tag:
+              $ref: '#/components/headers/NoIndex'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '410':
+          description: The link has expired. A replacement can be requested.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /api/account/recovery-requests:
+    post:
+      summary: Ask for a link that allows setting a new password
+      description: >
+        Always answers 202, whether or not the address has an account. Limited per address and
+        per client.
+      operationId: requestRecovery
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/AntiforgeryHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailOnlyRequest'
+      responses:
+        '202':
+          description: Accepted. If the address has an account, a single-use, time-limited link has been sent.
+          headers:
+            X-Robots-Tag:
+              $ref: '#/components/headers/NoIndex'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /api/account/recoveries:
+    post:
+      summary: Set a new password by redeeming a recovery link
+      description: >
+        Setting the password clears any lockout in force, records the address as confirmed,
+        and ends every session that existed beforehand, including the one making this call if
+        there was one. The person can sign in with the new password immediately.
+      operationId: recoverPassword
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/AntiforgeryHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+      responses:
+        '204':
+          description: The password is set. Every earlier session for this account is refused from now on.
+          headers:
+            X-Robots-Tag:
+              $ref: '#/components/headers/NoIndex'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '410':
+          description: The link has been used or has expired. A replacement can be requested.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /api/account/session:
+    get:
+      summary: Who this browser is signed in as
+      description: >
+        Always 200. An anonymous browser gets signedIn false rather than a 401, because this
+        is how every page establishes whether to show a sign-in link or a sign-out one, and a
+        401 for the ordinary case would be noise. It is also how the frontend detects a browser
+        that is not keeping the session: after a successful sign-in this call comes back
+        anonymous, and the person is told so plainly rather than being returned silently to the
+        sign-in form.
+      operationId: getSession
+      security: []
+      responses:
+        '200':
+          description: The current session, real or anonymous.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          headers:
+            X-Robots-Tag:
+              $ref: '#/components/headers/NoIndex'
+
+    post:
+      summary: Sign in
+      description: >
+        On success the session cookie is set: HttpOnly so the page cannot read it,
+        SameSite=Strict so another site cannot cause it to be sent, and persistent for 30 days
+        with a sliding expiry so closing the browser does not sign the person out.
+
+        The failure responses are the security-critical part of this contract. An unknown
+        address and a wrong password both answer 401 with the same body. 403 with
+        emailNotConfirmed is returned only when the password supplied was correct, which is the
+        single case where this API confirms that an address has an account. Lockout and the
+        per-address rate limit both answer 429 with Retry-After, so an address with no account
+        cannot be told from one that exists.
+      operationId: signIn
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/AntiforgeryHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignInRequest'
+      responses:
+        '200':
+          description: Signed in. The session cookie is set.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+              description: The session cookie. HttpOnly, SameSite=Strict, Secure outside development.
+            X-Robots-Tag:
+              $ref: '#/components/headers/NoIndex'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          description: >
+            The combination was not recognised. Identical for an unknown address and for a
+            known address with the wrong password.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '403':
+          description: >
+            The password was correct but the address has not been confirmed. Another
+            confirmation message can be requested. This is the one response that confirms an
+            account exists, and it is reachable only by supplying that account's password.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+    delete:
+      summary: Sign out
+      description: >
+        Clears the session cookie. The cookie presented afterwards is refused, so a session
+        captured before signing out cannot be replayed. Other devices signed in to the same
+        account are unaffected. Answers 204 whether or not there was a session, so signing out
+        twice is not an error.
+      operationId: signOut
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/AntiforgeryHeader'
+      responses:
+        '204':
+          description: The session is ended and the cookie cleared.
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+              description: The session cookie, expired.
+            X-Robots-Tag:
+              $ref: '#/components/headers/NoIndex'
+
+components:
+  headers:
+    NoIndex:
+      schema:
+        type: string
+        const: noindex
+      description: >
+        Every response under /api/account/ carries it. FR-028 and Principle IV: robots.txt is
+        advisory and is never the protection.
+
+  parameters:
+    AntiforgeryHeader:
+      name: X-XSRF-TOKEN
+      in: header
+      required: true
+      schema:
+        type: string
+      description: >
+        The request token from /api/account/antiforgery-token. Required on every
+        state-changing request, because the session cookie is attached by the browser
+        automatically. A missing or wrong token answers 400.
+
+  responses:
+    ValidationFailed:
+      description: >
+        The submission is not well formed, or a password does not meet the policy. Every
+        failure names the field it concerns, so the interface can tie it to that field and
+        announce it rather than leaving the person to hunt.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ValidationProblemDetails'
+
+    TooManyRequests:
+      description: >
+        Too many attempts, from this client or against this address. Also the response for an
+        account that is locked out after consecutive failures, deliberately: the two are
+        indistinguishable so that a lockout does not disclose that an address has an account.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+            minimum: 1
+          description: Seconds until the next attempt is accepted.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+  schemas:
+    RegistrationRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          description: >
+            Stored as given and matched case-insensitively. 254 is the longest an address can
+            be, so a longer one is rejected rather than silently truncated.
+        password:
+          type: string
+          minLength: 12
+          maxLength: 256
+          description: >
+            Counted in characters over Unicode, so a password written entirely in Cyrillic or
+            containing an emoji is accepted. Never logged, never echoed, never stored in a
+            form it can be read back from.
+
+    EmailOnlyRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+
+    SignInRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          maxLength: 256
+
+    TokenRequest:
+      type: object
+      required: [accountId, token]
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        token:
+          type: string
+          description: >
+            The base64url token from the link. Single use and valid for 24 hours. It carries
+            the account's security stamp, which is what stops it being redeemed twice.
+
+    PasswordResetRequest:
+      type: object
+      required: [accountId, token, password]
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        token:
+          type: string
+        password:
+          type: string
+          minLength: 12
+          maxLength: 256
+
+    Session:
+      type: object
+      required: [signedIn]
+      properties:
+        signedIn:
+          type: boolean
+        email:
+          type: [string, 'null']
+          description: Present only when signedIn is true.
+        isVerifiedBeneficiary:
+          type: boolean
+          default: false
+          description: >
+            Whether this person is verified as entitled to accessible-format copies. Always
+            false in this feature; the field exists so the audio feature can gate on it without
+            a migration.
+
+    ConfirmationResult:
+      type: object
+      required: [outcome]
+      properties:
+        outcome:
+          type: string
+          enum: [confirmed, alreadyConfirmed]
+          description: >
+            alreadyConfirmed is a success, not an error. Following the same link twice is
+            ordinary, and reporting it as a failure would send a person looking for a problem
+            that is not there.
+
+    PasswordPolicy:
+      type: object
+      required:
+        [
+          minimumLength,
+          requiresDigit,
+          requiresUppercase,
+          requiresLowercase,
+          requiresNonAlphanumeric,
+        ]
+      properties:
+        minimumLength:
+          type: integer
+          minimum: 1
+        requiresDigit:
+          type: boolean
+        requiresUppercase:
+          type: boolean
+        requiresLowercase:
+          type: boolean
+        requiresNonAlphanumeric:
+          type: boolean
+
+    ProblemDetails:
+      type: object
+      description: RFC 9457. The detail is Ukrainian, because a person reads it.
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+
+    ValidationProblemDetails:
+      allOf:
+        - $ref: '#/components/schemas/ProblemDetails'
+        - type: object
+          properties:
+            errors:
+              type: object
+              additionalProperties:
+                type: array
+                items:
+                  type: string
+              description: >
+                Keyed by the field the failure concerns, so the interface can set aria-invalid
+                on that field and point it at the message through aria-describedby. This is
+                FR-031, and it is why the shape is per-field rather than one list.

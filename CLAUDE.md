@@ -49,7 +49,18 @@ pnpm lint     # oxlint
   full copy; so would anywhere under `/workspaces` outside the repo.
 - When killing dev servers with `pkill -f`, use a self-excluding pattern such as
   `pgrep -f 'Vox[L]ib'`; a plain `-f VoxLib.Api` also matches the shell running
-  the command and kills it.
+  the command and kills it. Check that port 5080 is actually free afterwards: a
+  stale `dotnet watch` answers `/health` from the previous build, so a new run
+  fails to bind and every request is served by old code, which looks like the
+  new endpoints simply not existing.
+- `dotnet ef` needs `dotnet tool restore` first, and it must run with
+  `--project backend/src/VoxLib.Dal` and no `--startup-project`. The design
+  package is a private asset there, so naming VoxLib.Api as the startup project
+  fails; `VoxLibDbContextFactory` exists so the DAL can be its own startup.
+- Mail in development goes to Mailpit at http://localhost:8025. Its service in
+  `docker-compose.yml` needs `network_mode: service:db` like the app, because
+  every service shares one network namespace; on a bridge network the API cannot
+  reach it and the failure is a connection refused when a message is sent.
 - `pnpm install` aborts with `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY` when it
   decides to purge `node_modules` and has no TTY to ask. Prefix with `CI=true`.
   Add `--no-frozen-lockfile` when a manifest changed, because `CI=true` also makes
