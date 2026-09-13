@@ -271,3 +271,66 @@ test.describe('the decoration', () => {
     ).toEqual(withoutGround)
   })
 })
+
+/**
+ * SC-019 and FR-053: the control a visitor came to press does not look like the
+ * fields above it.
+ *
+ * Before --action existed, a submit button and a text input carried the same
+ * --surface-raised fill and the same --border-control edge, so the only thing
+ * telling them apart was the word inside. That is a distinction a person
+ * scanning a form does not make, and it is the whole of what this checks: the
+ * submit control's computed fill differs from every other control's on the same
+ * form.
+ */
+test.describe('the next step looks like one', () => {
+  const FORMS = ['/register', '/sign-in', '/forgot-password'] as const
+
+  for (const path of FORMS) {
+    test(`the submit control on ${path} is filled unlike anything else on it`, async ({ page }) => {
+      await page.goto(path)
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+
+      const fills = await page.evaluate(() => {
+        const form = document.querySelector('form')
+
+        if (form === null) {
+          return null
+        }
+
+        const submit = form.querySelector<HTMLElement>('button[type="submit"], button:not([type])')
+        const others = [...form.querySelectorAll<HTMLElement>('input, select, textarea')]
+
+        return {
+          submit: submit === null ? null : getComputedStyle(submit).backgroundColor,
+          others: others.map((element) => getComputedStyle(element).backgroundColor),
+        }
+      })
+
+      expect(fills, `${path} has a form to check`).not.toBeNull()
+      expect(fills!.submit, `${path} has a submit control`).not.toBeNull()
+      expect(fills!.others.length, `${path} has fields to be distinguished from`).toBeGreaterThan(0)
+
+      expect(
+        fills!.others,
+        `the submit control on ${path} shares its fill with a field beside it, so the only ` +
+          'thing telling them apart is the label inside',
+      ).not.toContain(fills!.submit)
+    })
+  }
+
+  test("the banner's submit control is filled unlike the field beside it", async ({ page }) => {
+    await page.goto('/books')
+
+    const fills = await page.evaluate(() => {
+      const search = document.querySelector('.site-search')
+
+      return {
+        submit: getComputedStyle(search!.querySelector('button')!).backgroundColor,
+        field: getComputedStyle(search!.querySelector('input')!).backgroundColor,
+      }
+    })
+
+    expect(fills.submit).not.toBe(fills.field)
+  })
+})

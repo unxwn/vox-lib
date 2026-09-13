@@ -89,6 +89,52 @@ pnpm lint     # oxlint
   `frontend/tests/a11y/contrast.spec.ts` asserts zero `color-contrast` incompletes for
   this reason; if it fires, find the translucent region rather than relaxing it.
 
+- **Object storage is SeaweedFS, not MinIO, and the swap is the proof that R2 will be a
+  configuration change.** MinIO's community edition was archived in February 2026 and gets no
+  security patches; its images were pulled from Docker Hub and its binaries from `dl.min.io`.
+  The replacement cost five configuration values and no code, because `ICoverStorage` is
+  implemented once against `AWSSDK.S3`. Storage must be up before covers appear; the
+  `storage-setup` sidecar owns bucket creation, and public read comes from the `anonymous`
+  identity in `.devcontainer/seaweedfs-s3.json`, both deliberately outside application code
+  because every provider does that part differently. S3 is on `localhost:9000` and the object
+  browser is the filer on `localhost:8888`.
+
+- **`frontend/site-rules.ts` is the one place the redirect and static-file rules are written.**
+  They are installed as dev-server middleware by `frontend/vite/site-rules-plugin.ts`, ahead of
+  React Router's own, because that middleware answers every unmatched address with the document
+  and a 200 — so anything installed after it can only change a response that has already said the
+  old address is fine. The production host has to be configured from the same table, and until
+  there is one, SC-011 and SC-016 are proved against the dev server only.
+
+- **`backend/src/VoxLib.Dal/Seed/content.md` is the human-readable source for `books.json`.**
+  Adding a book means editing both, and adding a person means editing `authors.json` first: the
+  seeder fails loudly on a credit naming somebody that file does not hold, rather than inventing
+  the row. The `EmbeddedResource` glob for covers must match `Seed\covers\*.webp` only — a glob
+  over `Seed\covers\**` compiles the 3.7 MB of source PNGs into the assembly as well.
+
+- **The catalogue is smaller than one page, and three things quietly depend on that.** Four books
+  against `PageRequest.FixedPageSize = 20` means nothing paginates, so paging is proved only by
+  `frontend/tests/a11y/paging-fixture.ts`, which seeds rows and deletes them again; its titles all
+  begin with Я so that while they exist they cannot push the real books off the first page of a
+  spec running in parallel. `sparse-books-fixture.ts` does the same for a book with no chapters,
+  one with no description, one in another language and one unpublished, none of which the real
+  catalogue has. And `frontend/src/routes/catalogue-page.tsx` had to become a `clientLoader`,
+  because React Router refuses a `loader` on a route prerendering emits no document for: **when
+  the catalogue passes twenty books, change it back to `loader`**, or page two stops being
+  readable without scripts and FR-032 is lost silently.
+
+- **A route's `meta` receives `loaderData`, not `data`.** React Router 8 names it `loaderData`,
+  and a `meta({ data })` destructure compiles, runs, and silently receives `undefined` forever —
+  so every book page emitted the title "Книжку не знайдено" and the generic description whatever
+  book it was about. Nothing on screen shows it, because the page body reads its own loader data;
+  only the emitted document is wrong. `useMatches()` renamed the same field for the same reason.
+
+- **The browser suite shares one client address, and the API rate-limits it.**
+  `AccountDefaults.RequestsPerClientWindow` is 100 per 15 minutes, so running
+  `pnpm --filter frontend test:a11y` several times in quick succession makes the account specs
+  fail with what looks like a broken flow and is actually a 429. The limiter is in memory:
+  restarting the API resets it.
+
 - **An SVG referenced as an image cannot reach the page's webfonts.** It renders in an
   isolated document, so a wordmark drawn as a `background-image`, an `<img>` or `content`
   silently comes out in a fallback family with nothing visibly wrong. That is why the

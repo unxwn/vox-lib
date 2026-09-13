@@ -17,8 +17,19 @@ export type PageInScope = {
   readonly settled: string
 }
 
-/** Seeded in Ukrainian, with chapters, a description and multiple authors. */
-const BOOK = 'khiba-revut-voly'
+/** A real book: Ukrainian, with a description, a cover and one credit. */
+export const BOOK = 'stratehiia-i-taktyka-liderstva'
+
+/** A real book credited to a compiler rather than an author. */
+export const COMPILED_BOOK = 'yevhen-konovalets-oda-vozhdyzmu'
+
+/** A real author, and the compiler of COMPILED_BOOK. */
+export const AUTHOR = 'dzhoko-villink'
+
+export const COMPILER = 'dmytro-savchenko'
+
+/** A term that matches something in the real catalogue. */
+export const SEARCH_TERM = 'Коновалець'
 
 /**
  * A link that was never valid, so the account screens reached from an inbox
@@ -27,11 +38,24 @@ const BOOK = 'khiba-revut-voly'
  */
 const DEAD_LINK = 'account=00000000-0000-0000-0000-000000000001&token=not-a-real-token'
 
+/**
+ * This list is also what puts a page in scope for target-size.spec.ts,
+ * contrast.spec.ts, typography.spec.ts and high-contrast.spec.ts, which all read
+ * it. Adding a route here is the only thing that discharges SC-024 and SC-025
+ * for the new pages, so it is not bookkeeping.
+ */
 export const PAGES_IN_SCOPE: readonly PageInScope[] = [
-  { name: 'the catalogue', path: '/', settled: 'h1' },
-  { name: 'the second page of the catalogue', path: '/page/2', settled: 'h1' },
+  { name: 'the landing page', path: '/', settled: 'h1' },
+  { name: 'the catalogue', path: '/books', settled: 'h1' },
   { name: "one book's page", path: `/books/${BOOK}`, settled: 'h1' },
-  { name: 'search, with results', path: '/search?q=сон', settled: 'main [role="status"]' },
+  { name: 'the author index', path: '/authors', settled: 'h1' },
+  { name: "one author's page", path: `/authors/${AUTHOR}`, settled: 'h1' },
+  { name: 'about', path: '/about', settled: 'h1' },
+  {
+    name: 'search, with results',
+    path: `/search?q=${encodeURIComponent(SEARCH_TERM)}`,
+    settled: 'main [role="status"]',
+  },
   { name: 'not found', path: '/no-such-page-exists', settled: 'h1' },
   { name: 'register', path: '/register', settled: 'h1' },
   { name: 'confirming an address', path: `/confirm?${DEAD_LINK}`, settled: 'h1' },
@@ -72,13 +96,22 @@ export async function showWholePage(page: Page, width = 1280) {
 }
 
 /**
- * Waits for the session menu to know whether anybody is signed in.
+ * Waits for the banner's account slot to know whether anybody is signed in.
  *
- * It renders nothing at all until its request comes back, so its links join the
- * tab ring a moment after the router hydrates. Anything that presses Tab, or
- * compares one tab ring against another, has to wait for it or it is timing the
- * network rather than testing the page.
+ * The slot holds nothing focusable until its request comes back, so its controls
+ * join the tab ring a moment after the router hydrates. Anything that presses
+ * Tab, or compares one tab ring against another, has to wait for it or it is
+ * timing the network rather than testing the page.
+ *
+ * It waits on the resolved state rather than on a visible control, because
+ * "resolved" includes the anonymous branch and is the thing the slot actually
+ * signals.
  */
 export async function awaitSessionMenu(page: Page) {
-  await expect(page.locator('.session-menu a, .session-menu button').first()).toBeVisible()
+  await expect(
+    page.locator(
+      '.session-menu__slot[data-session="anonymous"], ' +
+        '.session-menu__slot[data-session="signedIn"]',
+    ),
+  ).toBeVisible()
 }

@@ -26,6 +26,20 @@
      here belongs to whatever is underneath. */
   pointer-events: none;
 
+  /*
+   * And a selection that crosses the page does not reach it either.
+   *
+   * Two things go wrong without this, and the second is the one people notice.
+   * Select All and copy picks up the watermark, so pasting a page yields
+   * "ZALIZNA biblioteka" dozens of times interleaved with the real text. And
+   * because the mark is live inline SVG inside a <pattern>, selecting it makes
+   * Chromium re-rasterise the whole tile — which reads on screen as every
+   * letter on the page flickering for a moment, as though the typeface had
+   * swapped. aria-hidden already keeps it from being read; this keeps it from
+   * being taken.
+   */
+  user-select: none;
+
   /* The flat --ground fill is on the document rather than here, so that this
      whole element can be dropped without anything underneath it changing. */
 }

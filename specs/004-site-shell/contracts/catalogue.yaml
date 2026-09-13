@@ -1,0 +1,329 @@
+openapi: 3.1.0
+info:
+  title: vox-lib catalogue, authors and search suggestions
+  version: '2.0'
+  description: >
+    The catalogue's public read surface after 004-site-shell. Version 2 because two response
+    shapes change incompatibly: a book's cover stops being one URL string and becomes a set of
+    prepared widths, and a book's authors stop being bare names and become addressable
+    references.
+
+    Every response here is metadata only. No endpoint returns audio, a link to audio, or a
+    storage key for audio, and none of them requires an account. Cover URLs are public,
+    unsigned and cacheable, which Principle IV permits because a cover is catalogue metadata.
+
+servers:
+  - url: /
+    description: Same origin. The browser reaches these paths through the dev server proxy.
+
+paths:
+  /api/books:
+    get:
+      summary: List published books, ordered by title, optionally matching a term
+      description: >
+        Unchanged in behaviour from version 1. Only the shape of each item changes: cover and
+        authors. Page size is fixed.
+      operationId: listBooks
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, default: 1 }
+          description: One-based page number.
+        - name: q
+          in: query
+          required: false
+          schema: { type: string, maxLength: 100 }
+          description: Search term matched against book titles and author names.
+      responses:
+        '200':
+          description: A page of books. Page 1 of an empty catalogue is a valid, empty page.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PagedBooks' }
+        '400':
+          description: The page number or search term is not well formed.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '404':
+          description: There is no such page.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /api/books/{slug}:
+    get:
+      summary: Read one published book with its chapters
+      operationId: getBook
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: The book.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BookDetail' }
+        '404':
+          description: >
+            No published book has this slug. One answer for a book that was never here and for
+            one that is not published yet; the catalogue does not disclose that a book is on
+            its way.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /api/authors:
+    get:
+      summary: Every author credited on a published book, ordered by sort name
+      description: >
+        Unpaged. FR-035 asks for the whole index, and no author in the catalogue is close to a
+        page's worth of books; if the index ever outgrows one response it adopts the
+        catalogue's existing paging convention rather than inventing another.
+
+        An author with no published books is absent, so this is never a list of names that
+        lead nowhere.
+      operationId: listAuthors
+      responses:
+        '200':
+          description: >
+            Every author with at least one published book, ordered by sortName under the
+            Ukrainian collation. The order is settled by slug so it is total and stable
+            between requests when two authors sort identically.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/AuthorSummary' }
+
+  /api/authors/{slug}:
+    get:
+      summary: One author and every published book they are credited on
+      operationId: getAuthor
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: The author, with every published book they are credited on.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthorDetail' }
+        '404':
+          description: >
+            No author has this slug, or the author has no published books. The two are one
+            answer, for the same reason an unpublished book is indistinguishable from an
+            absent one.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /api/search-suggestions:
+    get:
+      summary: A small random sample of things worth searching for
+      description: >
+        At most five suggestions, each a published book's title or the name of an author
+        credited on one, taken verbatim so that searching for any of them returns at least one
+        result. Sampled fresh on every request, so a returning visitor is not shown the same
+        handful; that is why the response may not be cached.
+
+        The frontend uses one response for both halves of FR-022: the links beneath the search
+        field, and the rotating example inside it.
+      operationId: listSearchSuggestions
+      responses:
+        '200':
+          description: >
+            Up to five suggestions. Fewer when the catalogue holds fewer distinct titles and
+            authors; an empty array when the catalogue is empty, which is the case where the
+            field falls back to its neutral placeholder and shows no suggestions.
+          headers:
+            Cache-Control:
+              schema: { type: string, const: no-store }
+              description: >
+                Required, not advisory. A cached response would freeze the sample per visitor
+                while it stayed fresh per request on the server.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    maxItems: 5
+                    items: { $ref: '#/components/schemas/SearchSuggestion' }
+
+components:
+  schemas:
+    PagedBooks:
+      type: object
+      required: [items, page, pageSize, totalCount, pageCount]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/BookSummary' }
+        page: { type: integer, minimum: 1 }
+        pageSize: { type: integer, minimum: 1 }
+        totalCount: { type: integer, minimum: 0 }
+        pageCount: { type: integer, minimum: 0 }
+
+    BookSummary:
+      type: object
+      required: [slug, title, authors, cover, chapterCount, totalRunningTimeSeconds]
+      properties:
+        slug: { type: string }
+        title: { type: string }
+        authors:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/AuthorReference' }
+        cover:
+          oneOf:
+            - { $ref: '#/components/schemas/Cover' }
+            - { type: 'null' }
+          description: Null when the book has no cover, which is a designed state.
+        chapterCount: { type: integer, minimum: 0 }
+        totalRunningTimeSeconds: { type: integer, minimum: 0 }
+
+    BookDetail:
+      allOf:
+        - $ref: '#/components/schemas/BookSummary'
+        - type: object
+          required: [description, narrator, language, chapters]
+          properties:
+            description:
+              oneOf: [{ type: string }, { type: 'null' }]
+            narrator:
+              oneOf: [{ type: string }, { type: 'null' }]
+              description: >
+                The name of the person whose voice is on the recording, the озвучувач. A name,
+                never anything to do with a file. Null when none is recorded.
+            language: { type: string }
+            chapters:
+              type: array
+              items: { $ref: '#/components/schemas/Chapter' }
+
+    Chapter:
+      type: object
+      required: [position, title, runningTimeSeconds]
+      properties:
+        position: { type: integer, minimum: 1 }
+        title: { type: string }
+        runningTimeSeconds: { type: integer, minimum: 0 }
+
+    CreditRole:
+      type: string
+      enum: [author, compiler]
+      description: >
+        How one person is credited on one book, per FR-066. A property of the pairing rather
+        than of the person, so the same person can be an author on one book and a compiler on
+        another. Two values only; translator and narrator credits are deferred.
+
+    AuthorIdentity:
+      type: object
+      required: [slug, name]
+      description: >
+        Who someone is, with nothing about any particular book. Carries the slug so a name can
+        be a link without a second request, which is FR-033.
+      properties:
+        slug: { type: string }
+        name: { type: string }
+
+    AuthorReference:
+      allOf:
+        - $ref: '#/components/schemas/AuthorIdentity'
+        - type: object
+          required: [role]
+          description: >
+            A person as credited on one particular book. The role belongs here and not on
+            AuthorIdentity because it is a fact about the pairing: the same person can be an
+            author on one book and a compiler on another.
+          properties:
+            role: { $ref: '#/components/schemas/CreditRole' }
+
+    AuthorSummary:
+      allOf:
+        - $ref: '#/components/schemas/AuthorIdentity'
+        - type: object
+          required: [sortName, bookCount, roles]
+          properties:
+            sortName:
+              type: string
+              description: Прізвище, Ім'я. What the index is ordered by.
+            bookCount:
+              type: integer
+              minimum: 1
+              description: Published books only, so it never promises a book a visitor cannot see.
+            roles:
+              type: array
+              minItems: 1
+              uniqueItems: true
+              items: { $ref: '#/components/schemas/CreditRole' }
+              description: >
+                Every distinct role this person holds across their published books, so the index
+                can say how they are credited (FR-035). A set rather than one value, because one
+                person may hold more than one.
+
+    AuthorDetail:
+      allOf:
+        - $ref: '#/components/schemas/AuthorSummary'
+        - type: object
+          required: [books]
+          properties:
+            books:
+              type: array
+              minItems: 1
+              items: { $ref: '#/components/schemas/BookSummary' }
+              description: >
+                Every published book this author is credited on, unpaged, in the catalogue's
+                own title order. The role held on each is read from that book's own authors
+                array rather than repeated here, so the two can never disagree.
+
+    Cover:
+      type: object
+      required: [sources]
+      description: >
+        A book's cover as a set of prepared widths. The caller picks; nothing is resized on
+        request. Every URL is public, unsigned and cacheable.
+      properties:
+        sources:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [url, width]
+            properties:
+              url: { type: string, format: uri }
+              width: { type: integer, enum: [160, 320] }
+
+    SearchSuggestion:
+      type: object
+      required: [term, kind]
+      properties:
+        term:
+          type: string
+          maxLength: 100
+          description: >
+            Verbatim, never edited. Searching for exactly this string returns at least one
+            result, which only holds because it was taken from a published row unchanged.
+        kind:
+          type: string
+          enum: [title, author]
+
+    Problem:
+      type: object
+      description: RFC 9457 problem details, as the framework emits them.
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }

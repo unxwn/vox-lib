@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { Link, useNavigate, useNavigation } from 'react-router'
+import { useNavigate, useNavigation } from 'react-router'
 import type { PagedBooks } from '../api/catalogue'
 import { catalogueMeta } from '../catalogue/meta'
 import { loadCataloguePage, type CatalogueState } from '../catalogue/page'
@@ -56,16 +56,10 @@ export function Catalogue({ state }: { state: CatalogueState }) {
   const isLoading = navigation.state === 'loading'
 
   return (
-    <main className="catalogue">
+    <div className="catalogue">
       <h1 ref={headingRef} tabIndex={-1} className="catalogue__heading">
         Каталог аудіокниг
       </h1>
-
-      {/* Without this the search has no way in: it is a page of its own, and a
-          visitor who knows the title they want should not have to page to it. */}
-      <p className="catalogue__search-link">
-        <Link to="/search">Шукати книжку за назвою або автором</Link>
-      </p>
 
       {state.status === 'unavailable' && (
         <ErrorState onRetry={() => void navigate('.', { replace: true })} />
@@ -74,7 +68,7 @@ export function Catalogue({ state }: { state: CatalogueState }) {
       {state.status === 'no-such-page' && <EmptyState reason="no-such-page" />}
 
       {state.status === 'ok' && <CatalogueResults page={state.page} isLoading={isLoading} />}
-    </main>
+    </div>
   )
 }
 

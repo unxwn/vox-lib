@@ -8,9 +8,15 @@ import { fetchCatalogue, type PagedBooks } from '../api/catalogue'
 export type CatalogueState =
   { status: 'ok'; page: PagedBooks } | { status: 'no-such-page' } | { status: 'unavailable' }
 
-/** The address of a catalogue page. Page one is the catalogue's own address. */
+/**
+ * The address of a catalogue page, and the only place that rule is written.
+ *
+ * Page one is the catalogue's own address rather than `/books/page/1`, so the
+ * landing page, the banner, the trail and pagination all lead to one address
+ * for it instead of two that show the same books (FR-030).
+ */
 export function catalogueHref(page: number): string {
-  return page <= 1 ? '/' : `/page/${page}`
+  return page <= 1 ? '/books' : `/books/page/${page}`
 }
 
 /**

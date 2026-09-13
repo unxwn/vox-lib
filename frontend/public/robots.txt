@@ -1,0 +1,13 @@
+# Everything is allowed, and that is deliberate rather than lax.
+#
+# robots.txt is advisory: it asks well-behaved crawlers not to fetch something,
+# and it is never what keeps a page out of an index. The pages that stay out —
+# the account screens and the search results — are kept out by the robots meta
+# tag they each carry, which is a directive rather than a request. Listing them
+# here would do the opposite of what it looks like: it would publish the exact
+# list of addresses worth looking at to anyone who reads this file.
+
+User-agent: *
+Allow: /
+
+Sitemap: /sitemap.xml

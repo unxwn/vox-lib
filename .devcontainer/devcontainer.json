@@ -49,12 +49,19 @@
     "ASPNETCORE_ENVIRONMENT": "Development"
   },
 
-  "forwardPorts": [5080, 5443, 5173, 8025],
+  "forwardPorts": [5080, 5443, 5173, 8025, 9000, 8888],
   "portsAttributes": {
     "5080": { "label": "API (http)", "onAutoForward": "silent" },
     "5443": { "label": "API (https)", "protocol": "https", "onAutoForward": "silent" },
     "5173": { "label": "Web (vite)", "onAutoForward": "notify" },
-    "8025": { "label": "Mailpit (mailbox)", "onAutoForward": "silent" }
+    "8025": { "label": "Mailpit (mailbox)", "onAutoForward": "silent" },
+    // Covers are fetched by the browser straight from object storage, so the
+    // API port being forwarded is not enough: without 9000 every cover is a
+    // broken image in a host browser while looking fine inside the container.
+    "9000": { "label": "Storage (S3)", "onAutoForward": "silent" },
+    // SeaweedFS's filer, which is also the object browser: what was MinIO's
+    // console on 9001.
+    "8888": { "label": "Storage (browser)", "onAutoForward": "silent" }
   },
 
   "postCreateCommand": "bash .devcontainer/post-create.sh",

@@ -1,0 +1,13 @@
+{
+  "identities": [
+    {
+      "name": "voxlib",
+      "credentials": [{ "accessKey": "voxlib", "secretKey": "voxlibsecret" }],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    },
+    {
+      "name": "anonymous",
+      "actions": ["Read"]
+    }
+  ]
+}

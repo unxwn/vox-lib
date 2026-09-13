@@ -1,4 +1,5 @@
-import { Form, Link, useSearchParams } from 'react-router'
+import { Link } from 'react-router'
+import { SearchSuggestions } from '../components/SearchSuggestions'
 import { BookList } from '../components/BookList'
 import { ErrorState } from '../components/ErrorState'
 import { Pagination } from '../components/Pagination'
@@ -29,62 +30,36 @@ export function meta() {
 }
 
 export default function SearchRoute({ loaderData }: { loaderData: SearchState }) {
-  const [parameters] = useSearchParams()
-
   return (
-    <main className="catalogue">
+    <div className="catalogue">
       <h1 className="catalogue__heading">Пошук аудіокниг</h1>
 
-      <SearchForm term={parameters.get('q') ?? ''} />
-
+      {/*
+        No form here. The field lives in the banner and is on every page, so a
+        second one in the body would give this page two search landmarks and two
+        inputs named the same thing, which is precisely what FR-011 forbids. The
+        header field carries the current term, so nothing is lost by removing
+        this one.
+      */}
       <SearchResults state={loaderData} />
-    </main>
-  )
-}
-
-/**
- * The search box.
- *
- * A real form submitting by GET, so pressing Enter in the field runs the search
- * with no pointing device involved and the result gets an address that can be
- * shared, bookmarked and returned to with the browser's back button. The submit
- * button is there for anyone who expects one and is reachable by keyboard like
- * any other control; it is not the only way to search.
- *
- * The label is a real label rather than a placeholder. A placeholder disappears
- * as soon as anything is typed, is not reliably announced, and fails contrast
- * requirements in most designs.
- */
-function SearchForm({ term }: { term: string }) {
-  return (
-    <Form method="get" action="/search" role="search" className="search__form">
-      <label className="search__label" htmlFor="search-term">
-        Назва книжки або ім'я автора
-      </label>
-      <div className="search__controls">
-        <input
-          id="search-term"
-          className="search__input"
-          type="search"
-          name="q"
-          defaultValue={term}
-          // The term is bounded on the server too; saying so here means a
-          // visitor is stopped at the field rather than by an error page.
-          maxLength={100}
-          autoComplete="off"
-        />
-        <button type="submit">Шукати</button>
-      </div>
-    </Form>
+    </div>
   )
 }
 
 function SearchResults({ state }: { state: SearchState }) {
   if (state.status === 'idle') {
     return (
-      <p className="search__prompt">
-        Введіть назву книжки або ім'я автора, щоб знайти її в каталозі.
-      </p>
+      <>
+        <p className="search__prompt">
+          Введіть назву книжки або ім'я автора, щоб знайти її в каталозі.
+        </p>
+        {/*
+          Before anything has been typed, in place of the results. Nothing
+          suggests results *while* a visitor types (FR-024): this is a starting
+          point, not a typeahead.
+        */}
+        <SearchSuggestions />
+      </>
     )
   }
 
@@ -132,7 +107,7 @@ function SearchResults({ state }: { state: SearchState }) {
             автора.
           </p>
           <p>
-            <Link to="/">Переглянути весь каталог аудіокниг</Link>
+            <Link to="/books">Переглянути весь каталог аудіокниг</Link>
           </p>
         </div>
       ) : (

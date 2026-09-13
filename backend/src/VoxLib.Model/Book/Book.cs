@@ -29,8 +29,21 @@ public sealed class Book
     /// <summary>Optional. A published book may have none.</summary>
     public string? Description { get; init; }
 
-    /// <summary>Optional. Absent means the placeholder is shown, per FR-006.</summary>
-    public string? CoverArtUrl { get; init; }
+    /// <summary>
+    /// The stem a set of prepared cover objects share, not a URL and not a path:
+    /// storing an address would bake one provider into the database and make
+    /// changing provider a data migration, which FR-043 forbids. The full
+    /// addresses are composed at the edge from configuration.
+    /// <para>Optional. Absent means the placeholder is shown, per FR-046.</para>
+    /// </summary>
+    public string? CoverKey { get; init; }
+
+    /// <summary>
+    /// The озвучувач, a name rather than a file reference. Optional: a book with
+    /// none shows none. It is the field that tells an audiobook from a book, and
+    /// what a listener chooses between two recordings by (FR-040).
+    /// </summary>
+    public string? Narrator { get; init; }
 
     /// <summary>Language tag for this book's metadata, so its page can declare it.</summary>
     public string Language { get; init; } = DefaultLanguage;
@@ -38,10 +51,17 @@ public sealed class Book
     public required PublicationState PublicationState { get; init; }
 
     /// <summary>At least one for a published book.</summary>
-    public required IReadOnlyList<Author> Authors { get; init; }
+    public required IReadOnlyList<AuthorCredit> Authors { get; init; }
 
     /// <summary>Ordered by <see cref="Chapter.Position"/>. May be empty.</summary>
     public required IReadOnlyList<Chapter> Chapters { get; init; }
+
+    /// <summary>
+    /// When this book joined the catalogue (FR-041). Required, and recorded now
+    /// rather than later because it cannot be backfilled honestly once the
+    /// moment has passed. Surfaced nowhere in this feature.
+    /// </summary>
+    public required DateTimeOffset AddedToCatalogue { get; init; }
 
     /// <summary>
     /// Whether this book may appear anywhere a reader can see. Every read path

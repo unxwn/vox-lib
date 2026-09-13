@@ -9,8 +9,8 @@ namespace VoxLib.Api.Tests.Catalogue;
 /// have to be able to find a book before they have any reason to register, so
 /// this is a requirement rather than a convenience.
 /// </summary>
-[Collection(CatalogueCollection.Name)]
-public class AnonymousAccessTests(CatalogueApiFixture fixture)
+[Collection(SampleCatalogueCollection.Name)]
+public class AnonymousAccessTests(SampleCatalogueApiFixture fixture)
 {
     private readonly HttpClient _client = fixture.CreateClient();
 

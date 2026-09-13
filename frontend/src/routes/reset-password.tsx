@@ -70,7 +70,7 @@ export default function ResetPasswordRoute() {
 
   if (phase === 'done') {
     return (
-      <main className="account">
+      <div className="account">
         <h1 className="account__heading" ref={heading} tabIndex={-1}>
           Пароль змінено
         </h1>
@@ -83,13 +83,13 @@ export default function ResetPasswordRoute() {
         <div className="account__links">
           <Link to="/sign-in">Увійти</Link>
         </div>
-      </main>
+      </div>
     )
   }
 
   if (phase === 'expired') {
     return (
-      <main className="account">
+      <div className="account">
         <h1 className="account__heading" ref={heading} tabIndex={-1}>
           Посилання більше не дійсне
         </h1>
@@ -99,12 +99,12 @@ export default function ResetPasswordRoute() {
         <div className="account__links">
           <Link to="/forgot-password">Надіслати нове посилання</Link>
         </div>
-      </main>
+      </div>
     )
   }
 
   return (
-    <main className="account">
+    <div className="account">
       <h1 className="account__heading">Новий пароль</h1>
 
       <form className="account__form" onSubmit={submit} noValidate>
@@ -132,6 +132,6 @@ export default function ResetPasswordRoute() {
         {phase === 'submitting' && <p>Зберігаємо новий пароль…</p>}
         {failure !== undefined && <p>{failure}</p>}
       </StatusRegion>
-    </main>
+    </div>
   )
 }

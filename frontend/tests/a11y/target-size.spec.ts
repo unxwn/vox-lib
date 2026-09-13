@@ -48,6 +48,14 @@ for (const { name, path, settled } of PAGES_IN_SCOPE) {
               continue
             }
 
+            // Clipped out of view until it takes focus, which is what a skip
+            // link is: while it is clipped there is nothing to hit, and the
+            // rule applies to the size it takes when it appears. Its focused
+            // size is asserted in shell.spec.ts instead.
+            if (getComputedStyle(element).clipPath.startsWith('inset(50%')) {
+              continue
+            }
+
             if (box.width < minimum || box.height < minimum) {
               const label =
                 element.getAttribute('aria-label') ??

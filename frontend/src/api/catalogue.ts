@@ -10,6 +10,10 @@ export type BookSummary = components['schemas']['BookSummary']
 export type PagedBooks = components['schemas']['PagedBooks']
 export type BookDetail = components['schemas']['BookDetail']
 export type Chapter = components['schemas']['Chapter']
+export type Cover = components['schemas']['Cover']
+export type AuthorReference = components['schemas']['AuthorReference']
+export type AuthorSummary = components['schemas']['AuthorSummary']
+export type AuthorDetail = components['schemas']['AuthorDetail']
 
 export function fetchCatalogue(page: number): Promise<ApiResult<PagedBooks>> {
   return apiGet<PagedBooks>(`/api/books?page=${page}`)
@@ -26,4 +30,13 @@ export function searchCatalogue(term: string, page: number): Promise<ApiResult<P
 
 export function fetchBook(slug: string): Promise<ApiResult<BookDetail>> {
   return apiGet<BookDetail>(`/api/books/${encodeURIComponent(slug)}`)
+}
+
+/** Every author with a published book. Unpaged: the index is the whole list. */
+export function fetchAuthors(): Promise<ApiResult<{ items: AuthorSummary[] }>> {
+  return apiGet<{ items: AuthorSummary[] }>('/api/authors')
+}
+
+export function fetchAuthor(slug: string): Promise<ApiResult<AuthorDetail>> {
+  return apiGet<AuthorDetail>(`/api/authors/${encodeURIComponent(slug)}`)
 }

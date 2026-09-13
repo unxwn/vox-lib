@@ -1,82 +1,72 @@
 namespace VoxLib.Api.Tests.Infrastructure;
 
 /// <summary>
-/// What the committed seed dataset contains, stated once so the tests assert
-/// against a single description of it rather than each keeping its own copy.
+/// What the committed seed dataset contains — the books the project actually
+/// holds — stated once so the tests assert against a single description of it
+/// rather than each keeping its own copy.
+/// <para>
+/// It is small, and deliberately so: four books, one credit each, one of them a
+/// compiler rather than an author, and no drafts. Anything needing a catalogue
+/// with behaviour — paging, a contested sort order, a book missing its
+/// description — reads <see cref="SampleCatalogue"/> instead, which a fixture
+/// seeds. Shipping those to a reader to keep a test happy is the thing this
+/// split exists to prevent.
+/// </para>
 /// </summary>
 public static class SeededCatalogue
 {
     public const int PageSize = 20;
 
-    public const int PublishedCount = 26;
+    public const int PublishedCount = 4;
 
-    public const int PageCount = 2;
-
-    /// <summary>Seeded but not published, so nothing may ever show it.</summary>
-    public const string DraftSlug = "chorna-rada";
+    public const int PageCount = 1;
 
     /// <summary>
-    /// Every published book, in the order the catalogue must present them:
-    /// by title under Ukrainian collation, settled by slug.
-    /// <para>
-    /// This order is the point of several requirements at once, so it is worth
-    /// reading rather than skimming. Under a naive byte ordering "Ґудзик" would
-    /// fall at the end of the catalogue rather than after "Гайдамаки", and
-    /// "Єретик", "Інтермеццо" and "Їжачок" would fall before "Апостол черні",
-    /// because those letters sit outside the contiguous Cyrillic run. Latin
-    /// sorts after Cyrillic, which is why the English title is last.
-    /// </para>
+    /// Every book, by slug. The whole catalogue fits on one page, so this is
+    /// also the order the first page presents them in: by title under Ukrainian
+    /// collation, settled by slug.
     /// </summary>
     public static readonly string[] SlugsInOrder =
     [
-        "apostol-cherni", // А
-        "boiarynia", // Б
-        "vershnyky", // В
-        "haidamaky", // Г
-        "gudzyk", // Ґ, immediately after Г and not at the end
-        "dim-na-hori", // Д
-        "eneida", // Е
-        "yeretyk", // Є, after Е and not before А
-        "zhovtyi-kniaz", // Ж
-        "zemlia", // З
-        "intermezzo", // І
-        "yizhachok-i-zymova-kazka", // Ї, after І
-        "kaidasheva-simia", // К
-        "lisova-pisnia", // Л
-        "misto", // М
-        "natalka-poltavka", // Н
-        "opovidannia-vovchok", // О
-        "podorozh-doktora-leonardo", // П
-        "roksolana", // Р
-        "son-shevchenko", // С, last on page one
-        "son-vovchok", // the same title, first on page two
-        "tini-zabutykh-predkiv", // Т
-        "ukradene-shchastia", // У
-        "fata-morgana", // Ф
-        "khiba-revut-voly", // Х
-        "kobzar-selected-poems", // Latin, after every Cyrillic title
+        "yevhen-konovalets-oda-vozhdyzmu", // Євген Коновалець. Ода вождизму
+        "liudyna-na-perekhresti-rozdumy-pro-ekzystentsiinyi-intelekt", // Людина на перехресті
+        "stratehiia-i-taktyka-liderstva", // Стратегія і тактика лідерства
+        "shchodennyk-sotnyka-ustyma-yak-kozaky-kavkaz-voiuvaly", // Щоденник сотника Устима
     ];
 
     /// <summary>
-    /// The two books that share a title, straddling the page boundary. Together
-    /// they are what proves the order is total: sorted by title alone, nothing
-    /// decides which of them page one ends with.
+    /// Every title, as <c>content.md</c> records them. The seed test matches in
+    /// both directions against this, rather than counting: a count alone passes
+    /// against the wrong four.
     /// </summary>
-    public const string TitleSharedByTwoBooks = "Сон";
+    public static readonly string[] Titles =
+    [
+        "Євген Коновалець. Ода вождизму",
+        "Людина на перехресті. Роздуми про екзистенційний інтелект",
+        "Стратегія і тактика лідерства",
+        "Щоденник сотника Устима. Як козаки Кавказ воювали",
+    ];
 
-    public const string LastSlugOnFirstPage = "son-shevchenko";
+    /// <summary>The one book credited to a compiler rather than an author.</summary>
+    public const string CompiledSlug = "yevhen-konovalets-oda-vozhdyzmu";
 
-    public const string FirstSlugOnSecondPage = "son-vovchok";
+    public const string CompilerName = "Дмитро Савченко";
 
-    /// <summary>Published, and deliberately without cover art, per FR-006.</summary>
-    public const string SlugWithoutCoverArt = "gudzyk";
+    public const string CompilerSlug = "dmytro-savchenko";
 
-    /// <summary>Published, and deliberately without a description.</summary>
-    public const string SlugWithoutDescription = "yeretyk";
+    /// <summary>A book credited to an author, for contrast with the compiler.</summary>
+    public const string AuthoredSlug = "stratehiia-i-taktyka-liderstva";
 
-    /// <summary>Published with no chapters yet, so its running time is zero.</summary>
-    public const string SlugWithoutChapters = "intermezzo";
+    public const string AuthorName = "Джоко Віллінк";
 
-    /// <summary>Published, with metadata in a language other than Ukrainian.</summary>
-    public const string SlugInAnotherLanguage = "kobzar-selected-poems";
+    public const string AuthorSlug = "dzhoko-villink";
+
+    /// <summary>Every author, in the order the index must present them.</summary>
+    public static readonly string[] AuthorSlugsInOrder =
+    [
+        "valerii-bobrovych", // Бобрович, Валерій
+        "dzhoko-villink", // Віллінк, Джоко
+        "ihor-kozlovskyi", // Козловський, Ігор
+        "dmytro-savchenko", // Савченко, Дмитро
+    ];
 }

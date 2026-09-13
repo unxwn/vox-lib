@@ -9,8 +9,8 @@ namespace VoxLib.Api.Tests.Catalogue;
 /// it matches more than fits on a page. These are the cases a visitor reaches by
 /// accident, so each has to answer with something the interface can render.
 /// </summary>
-[Collection(CatalogueCollection.Name)]
-public class BookSearchEdgeCaseTests(CatalogueApiFixture fixture)
+[Collection(SampleCatalogueCollection.Name)]
+public class BookSearchEdgeCaseTests(SampleCatalogueApiFixture fixture)
 {
     /// <summary>
     /// The bound from contracts/catalogue.yaml. A term longer than this is a
@@ -35,9 +35,9 @@ public class BookSearchEdgeCaseTests(CatalogueApiFixture fixture)
     {
         var page = await GetAsync($"/api/books?q={Uri.EscapeDataString(term)}");
 
-        Assert.Equal(SeededCatalogue.PublishedCount, page.TotalCount);
-        Assert.Equal(SeededCatalogue.PageSize, page.Items.Count);
-        Assert.Equal(SeededCatalogue.PageCount, page.PageCount);
+        Assert.Equal(SampleCatalogue.PublishedCount, page.TotalCount);
+        Assert.Equal(SampleCatalogue.PageSize, page.Items.Count);
+        Assert.Equal(SampleCatalogue.PageCount, page.PageCount);
     }
 
     [Fact]
@@ -94,7 +94,7 @@ public class BookSearchEdgeCaseTests(CatalogueApiFixture fixture)
 
         Assert.Equal(23, first.TotalCount);
         Assert.Equal(2, first.PageCount);
-        Assert.Equal(SeededCatalogue.PageSize, first.Items.Count);
+        Assert.Equal(SampleCatalogue.PageSize, first.Items.Count);
 
         var second = await GetAsync("/api/books?q=а&page=2");
 

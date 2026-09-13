@@ -37,6 +37,11 @@
          it identically from the API, the tests and the design-time tooling,
          whatever the working directory happens to be. -->
     <EmbeddedResource Include="Seed\books.json" />
+    <EmbeddedResource Include="Seed\authors.json" />
+    <!-- The prepared widths only. A glob over Seed\covers\** would compile the
+         3.7 MB of source PNGs into the assembly as well, which is the kind of
+         thing nobody notices until the package is built. -->
+    <EmbeddedResource Include="Seed\covers\*.webp" />
   </ItemGroup>
 
 </Project>

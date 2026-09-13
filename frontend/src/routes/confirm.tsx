@@ -67,7 +67,7 @@ export default function ConfirmRoute() {
   }, [accountId, token])
 
   return (
-    <main className="account">
+    <div className="account">
       <h1 className="account__heading" ref={heading} tabIndex={-1}>
         {HEADINGS[phase]}
       </h1>
@@ -91,12 +91,12 @@ export default function ConfirmRoute() {
       {(phase === 'confirmed' || phase === 'alreadyConfirmed') && (
         <div className="account__links">
           <Link to="/sign-in">Увійти</Link>
-          <Link to="/">Повернутися до каталогу</Link>
+          <Link to="/books">Повернутися до каталогу</Link>
         </div>
       )}
 
       {phase === 'expired' && <ResendForm resent={resent} onResent={() => setResent(true)} />}
-    </main>
+    </div>
   )
 }
 

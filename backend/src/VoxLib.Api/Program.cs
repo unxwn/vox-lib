@@ -1,11 +1,14 @@
+using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using VoxLib.Api.Account;
+using VoxLib.Api.Author;
 using VoxLib.Api.Book;
 using VoxLib.Api.OpenApi;
+using VoxLib.Api.Search;
 using VoxLib.Dal.Account;
 using VoxLib.Dal.Book;
 using VoxLib.Dal.Persistence;
@@ -13,15 +16,26 @@ using VoxLib.Dal.Seed;
 using VoxLib.Model.Account;
 using VoxLib.Model.Book;
 using VoxLib.Model.Messaging;
+using VoxLib.Model.Storage;
 using VoxLib.Orchestrator.Account;
 using VoxLib.Orchestrator.Book;
 using VoxLib.Platform.Email;
+using VoxLib.Platform.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi(options =>
     options.AddSchemaTransformer<IntegerSchemaTransformer>());
 builder.Services.AddProblemDetails();
+
+// CreditRole crosses the wire, and it crosses as its name rather than as an
+// ordinal: contracts/catalogue.yaml declares the values "author" and
+// "compiler", and a number would tie the contract to the order the enum happens
+// to be declared in. Reordering it later would then silently rewrite the
+// meaning of every stored and transmitted value.
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.Converters.Add(
+        new JsonStringEnumConverter(System.Text.Json.JsonNamingPolicy.CamelCase)));
 
 // This file is the composition root, and the only place in VoxLib.Api that is
 // allowed to name VoxLib.Dal. Endpoints depend on the interfaces in
@@ -39,7 +53,17 @@ var connectionString =
 builder.Services.AddDbContext<VoxLibDbContext>(options => options.UseNpgsql(connectionString));
 builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<IBookCatalogue, BookCatalogue>();
+builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
+builder.Services.AddScoped<IAuthorCatalogue, AuthorCatalogue>();
+builder.Services.AddScoped<ICatalogueSuggestions, CatalogueSuggestions>();
 builder.Services.AddScoped<CatalogueSeeder>();
+
+// Cover storage. Singleton because the S3 client is one connection pool, and
+// scoping it would build one per request.
+builder.Services.Configure<CoverStorageOptions>(
+    builder.Configuration.GetSection(CoverStorageOptions.Section));
+builder.Services.AddSingleton<ICoverStorage, S3CoverStorage>();
+builder.Services.AddScoped<CoverSeeder>();
 
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddHttpContextAccessor();
@@ -272,6 +296,10 @@ await using (var startup = app.Services.CreateAsyncScope())
 {
     await startup.ServiceProvider.GetRequiredService<VoxLibDbContext>().Database.MigrateAsync();
     await startup.ServiceProvider.GetRequiredService<CatalogueSeeder>().SeedAsync();
+
+    // Beside the catalogue seeder, and guarded per object rather than per run:
+    // the bucket and the database are separate volumes with separate lifetimes.
+    await startup.ServiceProvider.GetRequiredService<CoverSeeder>().SeedAsync();
 }
 
 // A query parameter that will not parse is the caller's mistake, and the
@@ -328,6 +356,8 @@ app.MapGet("/health", () => Results.Ok(new { status = "ok", utc = DateTimeOffset
    .WithName("Health");
 
 app.MapBookEndpoints();
+app.MapAuthorEndpoints();
+app.MapSearchEndpoints();
 app.MapAccountEndpoints();
 app.MapSessionEndpoints();
 

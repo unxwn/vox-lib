@@ -8,8 +8,8 @@ namespace VoxLib.Api.Tests.Catalogue;
 /// a deserialised shape, because the point is that no such field exists at all,
 /// including one nobody thought to model.
 /// </summary>
-[Collection(CatalogueCollection.Name)]
-public class NoAudioExposureTests(CatalogueApiFixture fixture)
+[Collection(SampleCatalogueCollection.Name)]
+public class NoAudioExposureTests(SampleCatalogueApiFixture fixture)
 {
     /// <summary>
     /// Anything here in a response is either audio or close enough to it to be
@@ -60,8 +60,8 @@ public class NoAudioExposureTests(CatalogueApiFixture fixture)
     [Theory]
     [InlineData("haidamaky")]
     [InlineData("eneida")]
-    [InlineData(SeededCatalogue.SlugWithoutChapters)]
-    [InlineData(SeededCatalogue.SlugInAnotherLanguage)]
+    [InlineData(SampleCatalogue.SlugWithoutChapters)]
+    [InlineData(SampleCatalogue.SlugInAnotherLanguage)]
     public async Task No_detail_response_mentions_audio_in_any_form(string slug)
     {
         var body = await _client.GetStringAsync($"/api/books/{slug}");
@@ -80,7 +80,7 @@ public class NoAudioExposureTests(CatalogueApiFixture fixture)
     [Fact]
     public async Task No_published_book_anywhere_in_the_catalogue_mentions_audio()
     {
-        foreach (var slug in SeededCatalogue.SlugsInOrder)
+        foreach (var slug in SampleCatalogue.SlugsInOrder)
         {
             var body = await _client.GetStringAsync($"/api/books/{slug}");
 

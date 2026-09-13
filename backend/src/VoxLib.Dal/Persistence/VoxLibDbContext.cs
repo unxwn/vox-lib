@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using VoxLib.Dal.Account;
 using VoxLib.Dal.Book;
+using VoxLib.Model.Book;
 
 namespace VoxLib.Dal.Persistence;
 
@@ -87,12 +88,19 @@ public sealed class VoxLibDbContext(DbContextOptions<VoxLibDbContext> options)
                 .UseCollation(UkrainianCollation)
                 .IsRequired();
             book.Property(b => b.Description).HasColumnName("description");
-            book.Property(b => b.CoverArtUrl).HasColumnName("cover_art_url").HasMaxLength(2000);
+            book.Property(b => b.CoverKey).HasColumnName("cover_key").HasMaxLength(200);
+            book.Property(b => b.Narrator)
+                .HasColumnName("narrator")
+                .HasMaxLength(300)
+                .UseCollation(UkrainianCollation);
             book.Property(b => b.Language).HasColumnName("language").HasMaxLength(35).IsRequired();
             book.Property(b => b.PublicationState)
                 .HasColumnName("publication_state")
                 .HasConversion<string>()
                 .HasMaxLength(16)
+                .IsRequired();
+            book.Property(b => b.AddedToCatalogue)
+                .HasColumnName("added_to_catalogue_at")
                 .IsRequired();
 
             // A slug identifies at most one book, which is what makes it safe to
@@ -117,7 +125,30 @@ public sealed class VoxLibDbContext(DbContextOptions<VoxLibDbContext> options)
                 .UseCollation(UkrainianCollation)
                 .IsRequired();
 
+            author.Property(a => a.Slug).HasColumnName("slug").HasMaxLength(200).IsRequired();
+
+            // Under the Ukrainian collation because this is the column the index
+            // is ordered by, and sorting Ukrainian text under the database's
+            // default collation is how Ї ends up after Я.
+            author.Property(a => a.SortName)
+                .HasColumnName("sort_name")
+                .HasMaxLength(300)
+                .UseCollation(UkrainianCollation)
+                .IsRequired();
+
             author.HasIndex(a => a.Name).HasDatabaseName("ix_authors_name");
+
+            // A slug identifies at most one person. A collision is an error
+            // rather than something to resolve with a number, because an
+            // automatic suffix turns two rows for one person into two addresses
+            // and buries the defect (FR-038).
+            author.HasIndex(a => a.Slug).IsUnique().HasDatabaseName("ix_authors_slug");
+
+            // The index reads in exactly this order: by sort name, settled by
+            // slug so the order is total rather than merely sorted.
+            author
+                .HasIndex(a => new { a.SortName, a.Slug })
+                .HasDatabaseName("ix_authors_sort_name_slug");
         });
 
         modelBuilder.Entity<ChapterDao>(chapter =>
@@ -145,16 +176,36 @@ public sealed class VoxLibDbContext(DbContextOptions<VoxLibDbContext> options)
                 .HasDatabaseName("ix_chapters_book_id_position");
         });
 
-        modelBuilder
-            .Entity<BookDao>()
-            .HasMany(b => b.Authors)
-            .WithMany(a => a.Books)
-            .UsingEntity(join =>
-            {
-                join.ToTable("book_authors");
-                join.Property<Guid>("BooksId").HasColumnName("book_id");
-                join.Property<Guid>("AuthorsId").HasColumnName("author_id");
-            });
+        modelBuilder.Entity<BookAuthorDao>(credit =>
+        {
+            credit.ToTable("book_authors");
+            credit.HasKey(c => new { c.BookId, c.AuthorId });
+            credit.Property(c => c.BookId).HasColumnName("book_id");
+            credit.Property(c => c.AuthorId).HasColumnName("author_id");
+
+            // Stored as its name rather than an ordinal, so the column says what
+            // it means and reordering the enum cannot silently rewrite history.
+            // The default is Author, so every pairing that says nothing keeps
+            // the meaning it already had.
+            credit.Property(c => c.Role)
+                .HasColumnName("role")
+                .HasConversion<string>()
+                .HasMaxLength(16)
+                .HasDefaultValue(CreditRole.Author)
+                .IsRequired();
+
+            credit
+                .HasOne(c => c.Book)
+                .WithMany(b => b.Credits)
+                .HasForeignKey(c => c.BookId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            credit
+                .HasOne(c => c.Author)
+                .WithMany(a => a.Credits)
+                .HasForeignKey(c => c.AuthorId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
     }
 
     /// <summary>

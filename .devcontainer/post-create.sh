@@ -98,6 +98,18 @@ dotnet dev-certs https --trust >/dev/null 2>&1 || true
 if [ -f "$REPO_ROOT/frontend/package.json" ]; then
   log "pnpm install..."
   (cd "$REPO_ROOT/frontend" && pnpm install) || warn "pnpm install failed"
+
+  # Playwright keeps its browsers in ~/.cache/ms-playwright, which is overlayfs
+  # and is erased on every rebuild -- so the browser suite fails on a fresh
+  # container with "Executable doesn't exist" until somebody reinstalls them by
+  # hand. --with-deps as well as the browser: the shared libraries Chromium
+  # links against are apt packages on the container filesystem, and they go the
+  # same way, which shows up as "libglib-2.0.so.0: cannot open shared object
+  # file" rather than as a missing browser. Chromium only: it is the single
+  # project in playwright.config.ts.
+  log "playwright browsers..."
+  (cd "$REPO_ROOT/frontend" && pnpm exec playwright install --with-deps chromium) \
+    || warn "playwright install failed; run 'pnpm --filter frontend exec playwright install --with-deps chromium'"
 fi
 
 log "Done. node $(node --version) / pnpm $(pnpm --version) / dotnet $(dotnet --version)"

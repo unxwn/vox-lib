@@ -6,5 +6,9 @@ public sealed class AuthorDao
 
     public string Name { get; set; } = string.Empty;
 
-    public List<BookDao> Books { get; set; } = [];
+    public string Slug { get; set; } = string.Empty;
+
+    public string SortName { get; set; } = string.Empty;
+
+    public List<BookAuthorDao> Credits { get; set; } = [];
 }

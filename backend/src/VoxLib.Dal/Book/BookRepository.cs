@@ -37,8 +37,8 @@ public sealed class BookRepository(VoxLibDbContext database) : IBookRepository
         var matching = Published()
             .Where(book =>
                 EF.Functions.ILike(book.Title, pattern, PatternEscape)
-                || book.Authors.Any(author =>
-                    EF.Functions.ILike(author.Name, pattern, PatternEscape)));
+                || book.Credits.Any(credit =>
+                    EF.Functions.ILike(credit.Author!.Name, pattern, PatternEscape)));
 
         return ReadPageAsync(matching, page, cancellationToken);
     }
@@ -50,7 +50,8 @@ public sealed class BookRepository(VoxLibDbContext database) : IBookRepository
         var book = await database
             .Books.Where(book =>
                 book.Slug == slug && book.PublicationState == PublicationState.Published)
-            .Include(book => book.Authors)
+            .Include(book => book.Credits)
+            .ThenInclude(credit => credit.Author)
             .Include(book => book.Chapters)
             .AsNoTracking()
             .SingleOrDefaultAsync(cancellationToken);
@@ -60,6 +61,26 @@ public sealed class BookRepository(VoxLibDbContext database) : IBookRepository
         // put in order by the mapping, which is the one place that decision is
         // made for both the listing and this read.
         return book?.ToDomain();
+    }
+
+    public async Task<IReadOnlyList<string>> SampleTitlesAsync(
+        int count,
+        CancellationToken cancellationToken)
+    {
+        if (count <= 0)
+        {
+            return [];
+        }
+
+        // Ordered at random in the database rather than by reading the whole
+        // catalogue and shuffling here, so the sample costs one query and stays
+        // one query as the catalogue grows.
+        return await Published()
+            .OrderBy(_ => EF.Functions.Random())
+            .Take(count)
+            .Select(book => book.Title)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
     }
 
     private IQueryable<BookDao> Published() =>
@@ -102,7 +123,8 @@ public sealed class BookRepository(VoxLibDbContext database) : IBookRepository
             .ThenBy(book => book.Slug)
             .Skip(page.Skip)
             .Take(page.PageSize)
-            .Include(book => book.Authors)
+            .Include(book => book.Credits)
+            .ThenInclude(credit => credit.Author)
             .Include(book => book.Chapters)
             .AsNoTracking()
             .ToListAsync(cancellationToken);

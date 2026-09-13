@@ -68,7 +68,7 @@ export default function RegisterRoute() {
   // the next step is in their inbox.
   if (phase === 'sent') {
     return (
-      <main className="account">
+      <div className="account">
         <h1 className="account__heading" ref={done} tabIndex={-1}>
           Перевірте свою пошту
         </h1>
@@ -105,14 +105,14 @@ export default function RegisterRoute() {
 
         <div className="account__links">
           <Link to="/sign-in">Перейти до входу</Link>
-          <Link to="/">Повернутися до каталогу</Link>
+          <Link to="/books">Повернутися до каталогу</Link>
         </div>
-      </main>
+      </div>
     )
   }
 
   return (
-    <main className="account">
+    <div className="account">
       <h1 className="account__heading">Створити обліковий запис</h1>
 
       <p className="account__intro">
@@ -161,6 +161,6 @@ export default function RegisterRoute() {
       <div className="account__links">
         <Link to="/sign-in">Уже маєте обліковий запис? Увійти</Link>
       </div>
-    </main>
+    </div>
   )
 }
