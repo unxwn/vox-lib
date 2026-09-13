@@ -1,6 +1,8 @@
+using VoxLib.Api.Author.Contracts.Responses;
 using VoxLib.Api.Book.Contracts.Responses;
 using VoxLib.Model.Book;
 using VoxLib.Model.Common;
+using VoxLib.Model.Storage;
 using DomainBook = VoxLib.Model.Book.Book;
 using DomainChapter = VoxLib.Model.Book.Chapter;
 // Both namespaces have a Chapter: one is the entity, one is the wire shape.
@@ -30,6 +32,7 @@ public static class BookEndpoints
                 "/api/books",
                 async (
                     IBookCatalogue catalogue,
+                    ICoverStorage covers,
                     CancellationToken cancellationToken,
                     int page = 1,
                     string? q = null) =>
@@ -50,7 +53,7 @@ public static class BookEndpoints
                             title: "No such page",
                             detail: $"The catalogue has no page {page}.",
                             statusCode: StatusCodes.Status404NotFound)
-                        : Results.Ok(ToPagedBooks(result));
+                        : Results.Ok(ToPagedBooks(result, covers));
                 })
             .WithName("ListBooks")
             .WithSummary("List published books, ordered by title, optionally matching a term")
@@ -61,7 +64,11 @@ public static class BookEndpoints
         routes
             .MapGet(
                 "/api/books/{slug}",
-                async (string slug, IBookCatalogue catalogue, CancellationToken cancellationToken) =>
+                async (
+                    string slug,
+                    IBookCatalogue catalogue,
+                    ICoverStorage covers,
+                    CancellationToken cancellationToken) =>
                 {
                     var book = await catalogue.FindAsync(slug, cancellationToken);
 
@@ -74,7 +81,7 @@ public static class BookEndpoints
                             title: "No such book",
                             detail: $"The catalogue has no book '{slug}'.",
                             statusCode: StatusCodes.Status404NotFound)
-                        : Results.Ok(ToDetail(book));
+                        : Results.Ok(ToDetail(book, covers));
                 })
             .WithName("GetBook")
             .WithSummary("Read one published book with its chapters")
@@ -84,21 +91,24 @@ public static class BookEndpoints
         return routes;
     }
 
-    private static PagedBooks ToPagedBooks(PagedResult<DomainBook> page) =>
+    private static PagedBooks ToPagedBooks(
+        PagedResult<DomainBook> page,
+        ICoverStorage covers) =>
         new(
-            [.. page.Items.Select(ToSummary)],
+            [.. page.Items.Select(book => ToSummary(book, covers))],
             page.Page,
             page.PageSize,
             page.TotalCount,
             page.PageCount);
 
-    private static BookDetail ToDetail(DomainBook book) =>
+    private static BookDetail ToDetail(DomainBook book, ICoverStorage covers) =>
         new(
             book.Slug,
             book.Title,
-            [.. book.Authors.Select(author => author.Name)],
+            [.. book.Authors.Select(ToReference)],
             book.Description,
-            book.CoverArtUrl,
+            ToCover(book, covers),
+            book.Narrator,
             book.Language,
             book.ChapterCount,
             (int)book.TotalRunningTime.TotalSeconds,
@@ -107,12 +117,40 @@ public static class BookEndpoints
     private static ResponseChapter ToChapter(DomainChapter chapter) =>
         new(chapter.Position, chapter.Title, (int)chapter.RunningTime.TotalSeconds);
 
-    private static BookSummary ToSummary(DomainBook book) =>
+    /// <summary>
+    /// Public because the author resource returns the same shape for the books
+    /// on a person's page. One conversion rather than two that can disagree
+    /// about what a book looks like in a list.
+    /// </summary>
+    public static BookSummary ToSummary(DomainBook book, ICoverStorage covers) =>
         new(
             book.Slug,
             book.Title,
-            [.. book.Authors.Select(author => author.Name)],
-            book.CoverArtUrl,
+            [.. book.Authors.Select(ToReference)],
+            ToCover(book, covers),
             book.ChapterCount,
             (int)book.TotalRunningTime.TotalSeconds);
+
+    /// <summary>
+    /// The prepared widths for a book that has a cover, and null for one that
+    /// does not — which is a designed state rather than a missing value, and is
+    /// what the placeholder is for.
+    /// <para>
+    /// Composing a URL touches no network, so this cannot fail and a catalogue
+    /// response never depends on storage being reachable (FR-051). Whether the
+    /// object is actually there is the browser's problem, and a failed image is
+    /// swapped for the same placeholder.
+    /// </para>
+    /// </summary>
+    private static Cover? ToCover(DomainBook book, ICoverStorage covers) =>
+        book.CoverKey is { Length: > 0 } key
+            ? new Cover(
+                [
+                    .. CoverWidths.Prepared.Select(width =>
+                        new CoverSource(covers.PublicUrl(key, width).ToString(), width)),
+                ])
+            : null;
+
+    private static AuthorReference ToReference(AuthorCredit credit) =>
+        new(credit.Author.Slug, credit.Author.Name, credit.Role);
 }

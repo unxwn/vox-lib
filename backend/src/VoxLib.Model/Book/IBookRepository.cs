@@ -30,4 +30,11 @@ public interface IBookRepository
     /// or null when no published book has it.
     /// </summary>
     Task<Book?> FindBySlugAsync(string slug, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// A small random sample of published titles, for the search suggestions.
+    /// Titles come back verbatim, because a suggestion that has been edited is
+    /// no longer guaranteed to find anything.
+    /// </summary>
+    Task<IReadOnlyList<string>> SampleTitlesAsync(int count, CancellationToken cancellationToken);
 }

@@ -9,8 +9,8 @@ namespace VoxLib.Api.Tests.Catalogue;
 /// author names, it ignores letter case, and it never reaches a book a visitor
 /// is not allowed to see.
 /// </summary>
-[Collection(CatalogueCollection.Name)]
-public class BookSearchEndpointTests(CatalogueApiFixture fixture)
+[Collection(SampleCatalogueCollection.Name)]
+public class BookSearchEndpointTests(SampleCatalogueApiFixture fixture)
 {
     private readonly HttpClient _client = fixture.CreateClient();
 
@@ -93,7 +93,7 @@ public class BookSearchEndpointTests(CatalogueApiFixture fixture)
 
         // The same total order as the plain listing: by title under Ukrainian
         // collation, settled by slug.
-        var expected = SeededCatalogue.SlugsInOrder.Where(slugs.Contains);
+        var expected = SampleCatalogue.SlugsInOrder.Where(slugs.Contains);
 
         Assert.Equal(expected, slugs);
     }

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router'
 import { FormField } from '../components/FormField'
 import { StatusRegion } from '../components/StatusRegion'
 import { sendAccountRequest } from '../api/account'
-import { readSession } from '../account/useSession'
+import { useSession } from '../account/useSession'
 import '../styles/account.css'
 
 export function meta() {
@@ -19,6 +19,7 @@ type Failure =
 
 export default function SignInRoute() {
   const navigate = useNavigate()
+  const { refresh } = useSession()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -43,7 +44,13 @@ export default function SignInRoute() {
       // blocked site data both look like this, and the alternative is returning
       // the person silently to a form they just filled in correctly, which is
       // indistinguishable from a wrong password.
-      const session = await readSession()
+      // refresh, not read. The session is read once per page view and shared,
+      // so a plain read returns the answer this page loaded with — which was
+      // "anonymous", because signing in is what just changed it. That reports a
+      // correct password as a browser refusing to keep the session. It also
+      // updates the banner, which is the other thing that has to stop saying
+      // "Увійти" the moment this succeeds.
+      const session = await refresh()
 
       if (session.state !== 'signedIn') {
         setBusy(false)
@@ -82,7 +89,7 @@ export default function SignInRoute() {
   }
 
   return (
-    <main className="account">
+    <div className="account">
       <h1 className="account__heading">Вхід</h1>
 
       <form className="account__form" onSubmit={submit} noValidate>
@@ -145,8 +152,8 @@ export default function SignInRoute() {
       <div className="account__links">
         <Link to="/forgot-password">Забули пароль?</Link>
         <Link to="/register">Створити обліковий запис</Link>
-        <Link to="/">Повернутися до каталогу</Link>
+        <Link to="/books">Повернутися до каталогу</Link>
       </div>
-    </main>
+    </div>
   )
 }

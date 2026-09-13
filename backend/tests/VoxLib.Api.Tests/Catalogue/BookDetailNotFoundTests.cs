@@ -9,14 +9,14 @@ namespace VoxLib.Api.Tests.Catalogue;
 /// The two ways a book can fail to be there, and the several ways it can be
 /// sparse without being absent. FR-011.
 /// </summary>
-[Collection(CatalogueCollection.Name)]
-public partial class BookDetailNotFoundTests(CatalogueApiFixture fixture)
+[Collection(SampleCatalogueCollection.Name)]
+public partial class BookDetailNotFoundTests(SampleCatalogueApiFixture fixture)
 {
     private readonly HttpClient _client = fixture.CreateClient();
 
     [Theory]
     [InlineData("no-such-book-at-all")]
-    [InlineData(SeededCatalogue.DraftSlug)]
+    [InlineData(SampleCatalogue.DraftSlug)]
     public async Task A_book_that_may_not_be_read_is_not_found(string slug)
     {
         var response = await _client.GetAsync($"/api/books/{slug}");
@@ -35,7 +35,7 @@ public partial class BookDetailNotFoundTests(CatalogueApiFixture fixture)
     [Fact]
     public async Task An_unpublished_book_is_indistinguishable_from_one_that_never_existed()
     {
-        var draft = await ComparableNotFoundBodyAsync(SeededCatalogue.DraftSlug);
+        var draft = await ComparableNotFoundBodyAsync(SampleCatalogue.DraftSlug);
         var absent = await ComparableNotFoundBodyAsync("no-such-book-at-all");
 
         Assert.Equal(absent, draft);
@@ -47,7 +47,7 @@ public partial class BookDetailNotFoundTests(CatalogueApiFixture fixture)
         var listing = await _client.GetFromJsonAsync<PagedBooksResponse>("/api/books?page=2")
             ?? throw new InvalidOperationException("The catalogue returned no body.");
 
-        Assert.DoesNotContain(SeededCatalogue.DraftSlug, listing.Items.Select(book => book.Slug));
+        Assert.DoesNotContain(SampleCatalogue.DraftSlug, listing.Items.Select(book => book.Slug));
     }
 
     /// <summary>
@@ -55,9 +55,9 @@ public partial class BookDetailNotFoundTests(CatalogueApiFixture fixture)
     /// readable, and its page has to render from what it does have.
     /// </summary>
     [Theory]
-    [InlineData(SeededCatalogue.SlugWithoutChapters)]
-    [InlineData(SeededCatalogue.SlugWithoutDescription)]
-    [InlineData(SeededCatalogue.SlugWithoutCoverArt)]
+    [InlineData(SampleCatalogue.SlugWithoutChapters)]
+    [InlineData(SampleCatalogue.SlugWithoutDescription)]
+    [InlineData(SampleCatalogue.SlugWithoutCoverArt)]
     public async Task A_published_book_missing_optional_metadata_is_still_readable(string slug)
     {
         var response = await _client.GetAsync($"/api/books/{slug}");
@@ -76,7 +76,7 @@ public partial class BookDetailNotFoundTests(CatalogueApiFixture fixture)
     public async Task A_book_with_no_chapters_reports_none_rather_than_omitting_the_list()
     {
         var book = await _client.GetFromJsonAsync<BookDetailResponse>(
-            $"/api/books/{SeededCatalogue.SlugWithoutChapters}")
+            $"/api/books/{SampleCatalogue.SlugWithoutChapters}")
             ?? throw new InvalidOperationException("The book returned no body.");
 
         Assert.Empty(book.Chapters);
@@ -88,7 +88,7 @@ public partial class BookDetailNotFoundTests(CatalogueApiFixture fixture)
     public async Task A_book_with_no_description_says_so_with_a_null_rather_than_an_empty_string()
     {
         var book = await _client.GetFromJsonAsync<BookDetailResponse>(
-            $"/api/books/{SeededCatalogue.SlugWithoutDescription}")
+            $"/api/books/{SampleCatalogue.SlugWithoutDescription}")
             ?? throw new InvalidOperationException("The book returned no body.");
 
         Assert.Null(book.Description);

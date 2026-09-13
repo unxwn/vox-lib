@@ -15,13 +15,17 @@ public sealed class BookDao
 
     public string? Description { get; set; }
 
-    public string? CoverArtUrl { get; set; }
+    public string? CoverKey { get; set; }
+
+    public string? Narrator { get; set; }
 
     public string Language { get; set; } = Model.Book.Book.DefaultLanguage;
 
     public Model.Book.PublicationState PublicationState { get; set; }
 
-    public List<AuthorDao> Authors { get; set; } = [];
+    public DateTimeOffset AddedToCatalogue { get; set; }
+
+    public List<BookAuthorDao> Credits { get; set; } = [];
 
     public List<ChapterDao> Chapters { get; set; } = [];
 }

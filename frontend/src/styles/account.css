@@ -125,14 +125,28 @@
   content: 'Помилка: ';
 }
 
+/*
+ * The control the visitor came to press.
+ *
+ * It is filled where every field above it is outlined, which is the whole of
+ * FR-053: the next step has to be distinguishable from the things around it by
+ * more than its label. Until this, a submit button and a text input carried the
+ * same --surface-raised fill and the same --border-control edge, so the only
+ * thing telling them apart was the word inside.
+ *
+ * No hover rule. This site has no hover styles anywhere, and adding one here
+ * would make the primary action the single element on the site that responds to
+ * a pointer — which reads as an inconsistency rather than as affordance.
+ */
 .account__actions button {
   font: inherit;
   font-size: var(--text-base);
+  font-weight: 600;
   min-height: var(--target-min);
   padding: var(--space-2) var(--space-4);
-  color: var(--text);
-  background-color: var(--surface-raised);
-  border: 1px solid var(--border-control);
+  color: var(--on-action);
+  background-color: var(--action);
+  border: 1px solid var(--action);
   border-radius: var(--radius-sm);
 }
 
@@ -142,5 +156,7 @@
  * it. So this dims the boundary, not the words.
  */
 .account__actions button:disabled {
+  color: var(--text);
+  background-color: var(--surface-raised);
   border-color: var(--border-structural);
 }

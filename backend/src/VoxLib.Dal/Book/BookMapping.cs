@@ -1,3 +1,4 @@
+using VoxLib.Model.Book;
 using DomainAuthor = VoxLib.Model.Book.Author;
 using DomainBook = VoxLib.Model.Book.Book;
 using DomainChapter = VoxLib.Model.Book.Chapter;
@@ -8,7 +9,7 @@ namespace VoxLib.Dal.Book;
 /// The one crossing from storage to the domain. Keeping it in a single place is
 /// what lets the rest of the application forget that a database exists.
 /// </summary>
-internal static class BookMapping
+public static class BookMapping
 {
     public static DomainBook ToDomain(this BookDao book) =>
         new()
@@ -17,9 +18,11 @@ internal static class BookMapping
             Slug = book.Slug,
             Title = book.Title,
             Description = book.Description,
-            CoverArtUrl = book.CoverArtUrl,
+            CoverKey = book.CoverKey,
+            Narrator = book.Narrator,
             Language = book.Language,
             PublicationState = book.PublicationState,
+            AddedToCatalogue = book.AddedToCatalogue,
 
             // The join carries no order of its own, so one is imposed here.
             // Ordering by name is a decision, not a requirement: the
@@ -29,8 +32,9 @@ internal static class BookMapping
             Authors =
             [
                 .. book
-                    .Authors.OrderBy(author => author.Name, StringComparer.Ordinal)
-                    .Select(author => new DomainAuthor { Id = author.Id, Name = author.Name }),
+                    .Credits.Where(credit => credit.Author is not null)
+                    .OrderBy(credit => credit.Author!.Name, StringComparer.Ordinal)
+                    .Select(credit => new AuthorCredit(credit.Author!.ToDomain(), credit.Role)),
             ],
 
             Chapters =
@@ -46,5 +50,14 @@ internal static class BookMapping
                         RunningTime = chapter.RunningTime,
                     }),
             ],
+        };
+
+    public static DomainAuthor ToDomain(this AuthorDao author) =>
+        new()
+        {
+            Id = author.Id,
+            Name = author.Name,
+            Slug = author.Slug,
+            SortName = author.SortName,
         };
 }

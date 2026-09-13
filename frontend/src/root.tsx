@@ -1,6 +1,18 @@
-import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
-import { SessionMenu } from './components/SessionMenu'
+import {
+  Links,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+  useLocation,
+  useMatches,
+} from 'react-router'
+import { SessionProvider } from './account/SessionProvider'
+import { breadcrumbsFor } from './catalogue/breadcrumbs'
+import { Breadcrumbs } from './components/Breadcrumbs'
 import { Ground } from './components/Ground'
+import { SiteFooter } from './components/SiteFooter'
+import { SiteHeader } from './components/SiteHeader'
 
 // tokens.css first: base.css reads every value it sets from it. Imported here
 // rather than per route so that every page, and every prerendered document,
@@ -8,6 +20,7 @@ import { Ground } from './components/Ground'
 import './styles/tokens.css'
 import './styles/base.css'
 import './styles/ground.css'
+import './styles/shell.css'
 
 /**
  * The document every page is served inside. The language is declared here, on
@@ -41,18 +54,52 @@ export function Layout({ children }: { children: React.ReactNode }) {
   )
 }
 
+/**
+ * The shell every page is drawn inside: a banner, the content, a footer.
+ *
+ * The provider wraps all three so the session is read once per page view rather
+ * than once per component that wants it (FR-009). `Ground` stays where
+ * 003-visual-identity left it, as the first child of the body and a sibling of
+ * everything here.
+ *
+ * The trail sits inside `main` rather than above it. It is about the page, so
+ * it belongs to the page; putting it in the banner would make it part of the
+ * furniture a skip link exists to skip.
+ */
 export default function Root() {
+  const { pathname } = useLocation()
+  const matches = useMatches()
+
+  /*
+    The two addresses whose last step is a record rather than a fixed word — a
+    book and an author — supply their own name through a route handle. The trail
+    is still derived rather than authored: the route says what it is called, and
+    breadcrumbs.ts decides where that name goes. Until the data lands the slug
+    stands in, so the trail never renders empty.
+  */
+  const title = matches.reduce<string | undefined>((found, match) => {
+    const handle = match.handle as { crumb?: (data: unknown) => string | undefined } | undefined
+
+    return handle?.crumb?.(match.loaderData) ?? found
+  }, undefined)
+
   return (
-    <>
+    <SessionProvider>
+      <SiteHeader />
+
       {/*
-        On every page, so a person on a shared device can tell at a glance, and
-        with a screen reader, whether they are still signed in. It renders after
-        the page loads rather than being built into the document, because these
-        pages are prerendered and who is signed in is not a property of the
-        document.
+        tabIndex={-1} is what makes the skip link work rather than merely exist.
+        A fragment link moves focus only to a target that can take it; without
+        this the browser scrolls to the content and leaves the keyboard back in
+        the banner, which looks correct to a sighted visitor and does nothing at
+        all for the person the link is for.
       */}
-      <SessionMenu />
-      <Outlet />
-    </>
+      <main id="main" tabIndex={-1}>
+        <Breadcrumbs trail={breadcrumbsFor(pathname, title)} />
+        <Outlet />
+      </main>
+
+      <SiteFooter />
+    </SessionProvider>
   )
 }

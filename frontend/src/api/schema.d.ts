@@ -16,6 +16,18 @@ export interface paths {
     /** Read one published book with its chapters */
     get: operations["GetBook"];
   };
+  "/api/authors": {
+    /** Every author credited on a published book, ordered by sort name */
+    get: operations["ListAuthors"];
+  };
+  "/api/authors/{slug}": {
+    /** One author and every published book they are credited on */
+    get: operations["GetAuthor"];
+  };
+  "/api/search-suggestions": {
+    /** A small random sample of things worth searching for */
+    get: operations["ListSearchSuggestions"];
+  };
   "/api/weatherforecast": {
     get: operations["GetWeatherForecast"];
   };
@@ -61,12 +73,38 @@ export type webhooks = Record<string, never>;
 
 export interface components {
   schemas: {
+    AuthorDetail: {
+      slug: string;
+      name: string;
+      sortName: string;
+      /** Format: int32 */
+      bookCount: number;
+      roles: components["schemas"]["CreditRole"][];
+      books: components["schemas"]["BookSummary"][];
+    };
+    AuthorIndex: {
+      items: components["schemas"]["AuthorSummary"][];
+    };
+    AuthorReference: {
+      slug: string;
+      name: string;
+      role: components["schemas"]["CreditRole"];
+    };
+    AuthorSummary: {
+      slug: string;
+      name: string;
+      sortName: string;
+      /** Format: int32 */
+      bookCount: number;
+      roles: components["schemas"]["CreditRole"][];
+    };
     BookDetail: {
       slug: string;
       title: string;
-      authors: string[];
+      authors: components["schemas"]["AuthorReference"][];
       description: null | string;
-      coverArtUrl: null | string;
+      cover: null | components["schemas"]["Cover"];
+      narrator: null | string;
       language: string;
       /** Format: int32 */
       chapterCount: number;
@@ -77,8 +115,8 @@ export interface components {
     BookSummary: {
       slug: string;
       title: string;
-      authors: string[];
-      coverArtUrl: null | string;
+      authors: components["schemas"]["AuthorReference"][];
+      cover: null | components["schemas"]["Cover"];
       /** Format: int32 */
       chapterCount: number;
       /** Format: int32 */
@@ -94,6 +132,16 @@ export interface components {
     ConfirmationResult: {
       outcome: string;
     };
+    Cover: {
+      sources: components["schemas"]["CoverSource"][];
+    };
+    CoverSource: {
+      url: string;
+      /** Format: int32 */
+      width: number;
+    };
+    /** @enum {unknown} */
+    CreditRole: "author" | "compiler";
     EmailOnlyRequest: {
       email: null | string;
     };
@@ -145,6 +193,13 @@ export interface components {
       email: null | string;
       password: null | string;
     };
+    SearchSuggestion: {
+      term: string;
+      kind: components["schemas"]["SuggestionKind"];
+    };
+    SearchSuggestions: {
+      items: components["schemas"]["SearchSuggestion"][];
+    };
     SessionResponse: {
       signedIn: boolean;
       email: null | string;
@@ -154,6 +209,8 @@ export interface components {
       email: null | string;
       password: null | string;
     };
+    /** @enum {unknown} */
+    SuggestionKind: "title" | "author";
     TokenRequest: {
       /** Format: uuid */
       accountId: string;
@@ -237,6 +294,50 @@ export interface operations {
       404: {
         content: {
           "application/problem+json": components["schemas"]["ProblemDetails"];
+        };
+      };
+    };
+  };
+  /** Every author credited on a published book, ordered by sort name */
+  ListAuthors: {
+    responses: {
+      /** @description OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["AuthorIndex"];
+        };
+      };
+    };
+  };
+  /** One author and every published book they are credited on */
+  GetAuthor: {
+    parameters: {
+      path: {
+        slug: string;
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["AuthorDetail"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        content: {
+          "application/problem+json": components["schemas"]["ProblemDetails"];
+        };
+      };
+    };
+  };
+  /** A small random sample of things worth searching for */
+  ListSearchSuggestions: {
+    responses: {
+      /** @description OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["SearchSuggestions"];
         };
       };
     };

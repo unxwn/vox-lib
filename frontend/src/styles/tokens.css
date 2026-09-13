@@ -46,8 +46,44 @@
   --link: #9cc7ff;
 
   /* The focus indicator, and nothing else on the page. Its whole value is that
-     nothing else is this colour, so a ring is unmistakable wherever it lands. */
+     nothing else is this colour, so a ring is unmistakable wherever it lands.
+     A primary action in the same family would cost exactly that, which is why
+     --action below is teal and not a warmer amber. */
   --focus: #ffc857;
+
+  /* The fill of the control that submits a form, and nothing else.
+
+     Violet rather than the teal this started as, and the reason is harmony
+     rather than taste: the surfaces are indigo (#1a2654 sits at about 226deg),
+     so a violet at about 258deg is the adjacent hue and reads as belonging to
+     the palette, where a green sat outside it entirely and looked borrowed.
+
+     The three colours it has to stay apart from decided the rest. A sky blue
+     measures 1.09:1 against --link and would be mistaken for one; a rose sits
+     next to --danger and would read as a warning; anything amber would take the
+     one thing --focus has, which is being the only colour of its kind. Violet
+     is none of those.
+
+     Measured, not chosen: 4.01:1 against --surface and 3.29:1 against
+     --surface-raised, both above the 3:1 a control needs to read as a distinct
+     element rather than as a slightly different navy. It is the most saturated
+     violet that clears both -- a step further (#8b5cf6) measures 2.80:1 on the
+     raised surface and fails -- which is why it is this exact value and not a
+     rounder one.
+
+     --focus against --action measures 2.06:1, and that is deliberately NOT in
+     the enforced matrix: the indicator is an outline at --focus-offset, so what
+     abuts the ring on both sides is the region behind the button, and --focus
+     against --surface is the pair that decides whether the ring is visible.
+     data-model.md records this so nobody adds it later and finds it failing for
+     the wrong reason. */
+  --action: #9370f0;
+
+  /* Text and any icon on that fill: 5.34:1 on --action. It currently holds the
+     same value as --ground, and that is a coincidence rather than a
+     relationship — a colour role names what a colour is for, so if the ground
+     moves, the label on a teal button should not move with it. */
+  --on-action: #070d22;
 
   /* The text of a rejected field or a failed action. Never the only signal that
      something failed: a word says so as well. */

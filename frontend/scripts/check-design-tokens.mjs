@@ -58,6 +58,9 @@ const CONTRAST_FLOORS = [
   ['--focus', '--ground-grain-hi', 3, 'FR-011, the focus indicator on the ground at its lightest'],
   ['--border-control', '--surface', 3, 'FR-007, a control boundary on a region'],
   ['--border-control', '--surface-raised', 3, 'FR-007, a control boundary on a nested region'],
+  ['--action', '--surface', 3, 'FR-052, the primary action reading as a distinct control'],
+  ['--action', '--surface-raised', 3, 'FR-052, the same on a nested region'],
+  ['--on-action', '--action', 4.5, 'FR-053, the label on the primary action'],
   ['--surface', '--ground', 1.3, 'FR-004, a region reading as delineated from the ground'],
   ['--surface-raised', '--surface', 1.15, 'FR-004, a nested region reading as distinct'],
 ]

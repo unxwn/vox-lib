@@ -55,6 +55,60 @@ services:
       retries: 20
       start_period: 10s
 
+  # Object storage: covers now, and whatever the audio feature needs later.
+  #
+  # SeaweedFS rather than MinIO. MinIO's community edition was archived in
+  # February 2026 and gets no security patches; its console was stripped a year
+  # before that, and the community images and binaries were pulled from Docker
+  # Hub and dl.min.io. SeaweedFS is Apache 2.0, actively developed, and speaks
+  # the same S3 API -- which is the only thing this project asks of it.
+  #
+  # In production this is Cloudflare R2. Swapping the two costs five
+  # configuration values and no code, because the adapter talks S3 through
+  # AWSSDK.S3 rather than to any particular implementation (R4, FR-043). That
+  # was verified rather than assumed: the API was run against both with nothing
+  # changed but the Covers__ environment variables.
+  storage:
+    image: chrislusf/seaweedfs
+    restart: unless-stopped
+    # Same network namespace as app and db, for the reason mailpit is: every
+    # service here shares one stack, so the API reaches S3 at localhost:9000 and
+    # a browser reaches a cover at the same address. On a bridge network the API
+    # cannot see it at all.
+    network_mode: service:db
+    # One process carrying the master, a volume server, the filer and the S3
+    # gateway. S3 is put on 9000 so the committed Covers:ServiceUrl needs no
+    # port of its own; the filer's object browser is on 8888.
+    command: >
+      server -dir=/data -s3 -s3.port=9000
+      -s3.config=/etc/seaweedfs/s3.json -filer -ip=127.0.0.1
+    volumes:
+      # The object store must outlive a rebuild for the same reason the database
+      # must. It is a separate volume with a separate lifetime, which is why
+      # CoverSeeder guards per object rather than per run.
+      - vox-lib-storage:/data
+      - ./seaweedfs-s3.json:/etc/seaweedfs/s3.json:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1:9333/cluster/status']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  # Bucket creation stays out of application code, because bucket administration
+  # is the one thing MinIO and R2 disagree about and an adapter that did it would
+  # carry a development-only branch. In production Cloudflare creates it once, by
+  # hand. Re-running this is harmless: it recreates nothing and deletes nothing.
+  storage-setup:
+    image: chrislusf/seaweedfs
+    network_mode: service:db
+    depends_on:
+      storage:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "echo 's3.bucket.create -name vox-lib-covers'
+      | weed shell -master=localhost:9333"
+
   mailpit:
     image: axllent/mailpit
     restart: unless-stopped
@@ -85,6 +139,7 @@ volumes:
     name: vox-lib-bash-history
   vox-lib-nuget:
     name: vox-lib-nuget
-  # Not pinned: this one was born under Compose, so its prefixed name is the
-  # one holding the current database.
+  # Not pinned: these two were born under Compose, so their prefixed names are
+  # the ones holding the current data.
   vox-lib-pgdata:
+  vox-lib-storage:

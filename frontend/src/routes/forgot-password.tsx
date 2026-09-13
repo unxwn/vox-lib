@@ -60,7 +60,7 @@ export default function ForgotPasswordRoute() {
 
   if (sent) {
     return (
-      <main className="account">
+      <div className="account">
         <h1 className="account__heading" ref={done} tabIndex={-1}>
           Перевірте свою пошту
         </h1>
@@ -73,12 +73,12 @@ export default function ForgotPasswordRoute() {
         <div className="account__links">
           <Link to="/sign-in">Повернутися до входу</Link>
         </div>
-      </main>
+      </div>
     )
   }
 
   return (
-    <main className="account">
+    <div className="account">
       <h1 className="account__heading">Відновлення доступу</h1>
 
       <p className="account__intro">
@@ -114,6 +114,6 @@ export default function ForgotPasswordRoute() {
       <div className="account__links">
         <Link to="/sign-in">Згадали пароль? Увійти</Link>
       </div>
-    </main>
+    </div>
   )
 }

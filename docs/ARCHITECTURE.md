@@ -51,6 +51,21 @@ bytes", which is infrastructure.
 Access is behind an interface in `VoxLib.Model` with the implementation in
 `VoxLib.Platform`, so the provider can change without touching anything above it.
 
+**Cover art already works this way, and is the proof the arrangement holds.**
+`004-site-shell` added `ICoverStorage` in `VoxLib.Model/Storage/` and
+`S3CoverStorage` in `VoxLib.Platform/Storage/`, on `AWSSDK.S3`. The development
+stand-in changed from MinIO to SeaweedFS mid-feature — MinIO's community edition
+was archived in February 2026 — and the change cost five configuration values and
+no code at all. That is the same swap R2 will be.
+
+`ICoverStorage` has three members, and the absences are the contract: no signing,
+no delete, no list, no bucket administration and no `GetAsync`. It is therefore
+incapable of expressing a private object, which is the point — **`IAudioStorage`
+arrives as a separate interface rather than by widening this one.** They are not
+generalisations of each other: a cover is public, cacheable and indexable, audio
+is signed and must never be cached, and one interface serving both would have to
+be told on every call which it was holding.
+
 **Decision: Cloudflare R2 from the start.** Zero egress fees, and egress is the
 dominant cost for audio streaming. Telegram as a CDN was considered and rejected:
 the Bot API 20MB limit forces an MTProto userbot, which puts a ban-prone user account
@@ -98,6 +113,23 @@ The codebase will utilize a **Monorepo** architecture. This is critical for main
 - **V2:** Background audio processing pipelines (Message Queues/Background Workers) and automated `ffmpeg` HLS generation.
 - **V3:** Model Context Protocol (MCP) integration, autonomous AI Agent deployment for maintenance, and robust observability.
 - **V4:** Voice-interactive AI assistants for users, intelligent search, and semantic content recommendations based on listening habits.
+
+### Two rules the application cannot enforce
+
+The built frontend is static files, so by the time React Router sees an address
+the server has already answered `200` with a document. Two obligations therefore
+cannot live in the application at all:
+
+- **permanent redirects** from the addresses the catalogue used to live at, and
+- **`404` for a file-shaped path no file satisfies**, rather than the single-page
+  document — which is why two seeded books showed a broken image icon for months
+  while every status check reported success.
+
+Both rules are written once in `frontend/site-rules.ts` and installed as
+dev-server middleware by `frontend/vite/site-rules-plugin.ts`, ahead of React
+Router's own. **Whatever eventually serves the build has to be configured from
+that same table**; until there is such a host, the two requirements are proved
+against the dev server only, and that is a stated limit rather than an oversight.
 
 ## 7. Known Sharp Edges
 
@@ -205,9 +237,21 @@ VoxLib.Dal/Book/BookDao.cs
 VoxLib.Dal/Book/BookRepository.cs
 VoxLib.Dal/Book/BookMappingProfile.cs
 VoxLib.Dal/Persistence/VoxLibDbContext.cs
+VoxLib.Model/Storage/ICoverStorage.cs
+VoxLib.Platform/Storage/CoverStorageOptions.cs
+VoxLib.Platform/Storage/S3CoverStorage.cs
 VoxLib.Model/Storage/IAudioStorage.cs
 VoxLib.Platform/Storage/R2AudioStorage.cs
 ```
+
+Authors are a resource in their own right rather than a filter over books, so
+they take the shape books already have — `IAuthorRepository` beside
+`IBookRepository`, `IAuthorCatalogue` beside `IBookCatalogue`, and
+`Author/Contracts/Responses/` beside `Book/Contracts/Responses/`. How somebody is
+credited lives on the link between a person and a book (`CreditRole` on
+`BookAuthorDao`), not on either end: on the person it would be wrong the first
+time they write one book and compile another, and on the book the first time one
+has two kinds of credit.
 
 Folder names are singular and scoped by feature; contract folders are plural
 (`Requests/`, `Responses/`) with singular type names.

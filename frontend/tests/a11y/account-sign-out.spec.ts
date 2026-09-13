@@ -56,16 +56,30 @@ test.describe('the account menu', () => {
 
     await page.evaluate(() => document.body.focus())
 
-    // Early rather than first. The requirement is that a person can get to it
-    // without traversing the catalogue, not that it wins a race with whatever
-    // the browser puts before it.
+    /*
+      Reached before the content begins, rather than within a fixed number of
+      presses. The requirement is that a person can get to the account controls
+      without traversing the page, and "before main" states that directly; a
+      count states it only by accident, and stops being true the moment the
+      banner gains a control — which is exactly what happened when the site
+      gained a skip link, a wordmark, three navigation links and a search field.
+    */
     const reached: string[] = []
 
-    for (let step = 0; step < 5; step++) {
+    for (let step = 0; step < 30; step++) {
       await page.keyboard.press('Tab')
+
+      const inMain = await page.evaluate(
+        () => document.getElementById('main')?.contains(document.activeElement) ?? false,
+      )
+
+      if (inMain) {
+        break
+      }
+
       reached.push(await page.evaluate(() => document.activeElement?.textContent?.trim() ?? ''))
     }
 
-    expect(reached).toContain('Увійти')
+    expect(reached, 'the account controls are reached before the content').toContain('Увійти')
   })
 })

@@ -4,6 +4,7 @@ import type { BookDetail } from '../api/catalogue'
 import { loadBook, type BookState } from '../catalogue/book'
 import { bookMeta } from '../catalogue/meta'
 import { formatRunningTime } from '../catalogue/runningTime'
+import { AuthorLinks } from '../components/AuthorLink'
 import { ChapterList } from '../components/ChapterList'
 import { CoverArt } from '../components/CoverArt'
 import { ErrorState } from '../components/ErrorState'
@@ -41,12 +42,34 @@ export async function clientLoader({
   }
 }
 
-export function meta({ data }: { data?: BookState }) {
+/** What this page is called in the trail above it. */
+export const handle = {
+  crumb: (data: unknown) => {
+    const state = data as BookState | undefined
+
+    return state?.status === 'ok' ? state.book.title : undefined
+  },
+}
+
+/**
+ * `loaderData`, not `data`. React Router names this argument `loaderData`, and
+ * reading a `data` that is never passed meant `status !== 'ok'` was true on
+ * every render: every emitted book document carried the title "Книжку не
+ * знайдено" and the generic description, whatever book it was actually about.
+ * Nothing on screen showed it, because the page body reads its own loader data.
+ */
+export function meta({ loaderData: data }: { loaderData?: BookState }) {
   if (data?.status !== 'ok') {
     return [{ title: 'Книжку не знайдено · vox-lib' }]
   }
 
-  return bookMeta(data.book.title, data.book.description)
+  // The largest prepared width, where there is one: a preview card wants the
+  // biggest image available, and it is the only consumer that does.
+  const cover = data.book.cover?.sources.reduce((largest, source) =>
+    source.width >= largest.width ? source : largest,
+  )
+
+  return bookMeta(data.book.title, data.book.description, data.book.slug, cover?.url)
 }
 
 export default function BookRoute({ loaderData }: { loaderData: BookState }) {
@@ -58,10 +81,10 @@ export default function BookRoute({ loaderData }: { loaderData: BookState }) {
 
   if (loaderData.status === 'unavailable') {
     return (
-      <main className="catalogue">
+      <div className="catalogue">
         <h1 className="catalogue__heading">Книжка</h1>
         <ErrorState onRetry={() => void navigate('.', { replace: true })} />
-      </main>
+      </div>
     )
   }
 
@@ -88,7 +111,7 @@ function Book({ book }: { book: BookDetail }) {
   }, [navigationType, book.slug])
 
   return (
-    <main className="catalogue book">
+    <div className="catalogue book">
       {/*
         The book's own language, declared on the content that is in it rather
         than on the document. The interface around it stays Ukrainian, so a
@@ -101,11 +124,13 @@ function Book({ book }: { book: BookDetail }) {
 
       <p className="book__authors">
         <span className="book__label">Автор:</span>{' '}
-        <span lang={book.language}>{book.authors.join(', ')}</span>
+        <span lang={book.language}>
+          <AuthorLinks authors={book.authors} />
+        </span>
       </p>
 
       <div className="book__summary">
-        <CoverArt url={book.coverArtUrl} />
+        <CoverArt cover={book.cover} width={192} />
 
         <dl className="book__facts">
           <div>
@@ -116,6 +141,19 @@ function Book({ book }: { book: BookDetail }) {
             <dt>Загальна тривалість</dt>
             <dd>{formatRunningTime(book.totalRunningTimeSeconds)}</dd>
           </div>
+          {/*
+            Only when there is one. No book in the catalogue records an
+            озвучувач yet, so this branch renders for nothing today and is
+            proved by a fixture rather than by the seed — which is the honest
+            state of FR-040 in this feature, and why the field is worth adding
+            now rather than pretending it is exercised.
+          */}
+          {book.narrator !== null && book.narrator !== undefined && (
+            <div>
+              <dt>Озвучує</dt>
+              <dd>{book.narrator}</dd>
+            </div>
+          )}
         </dl>
       </div>
 
@@ -134,17 +172,24 @@ function Book({ book }: { book: BookDetail }) {
       <ChapterList chapters={book.chapters} language={book.language} />
 
       {/*
-        FR-009, and deliberately a sentence rather than a control. There is no
-        play button here, disabled or otherwise: a disabled control still
-        appears in a screen reader's list of controls and invites a listener to
-        look for a way to enable it, when the honest answer is that playback
-        does not exist yet.
+        FR-055, and deliberately a sentence with a link rather than a control.
+        There is no play button here, disabled or otherwise: a disabled control
+        still appears in a screen reader's list of controls and invites a
+        listener to hunt for a way to enable it, when the honest answer is that
+        playback does not exist yet.
+
+        What it gained is the link. Naming what the visitor lacks without
+        offering the way to get it is a dead end, and registration is one step
+        away.
       */}
-      <p className="book__listening">Щоб слухати цю книжку, потрібен обліковий запис.</p>
+      <p className="book__listening">
+        Щоб слухати цю книжку, потрібен обліковий запис.{' '}
+        <Link to="/register">Створити обліковий запис</Link>.
+      </p>
 
       <p>
-        <Link to="/">Повернутися до каталогу аудіокниг</Link>
+        <Link to="/books">Повернутися до каталогу аудіокниг</Link>
       </p>
-    </main>
+    </div>
   )
 }

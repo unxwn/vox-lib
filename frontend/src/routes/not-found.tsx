@@ -1,4 +1,5 @@
 import { Link } from 'react-router'
+import { SearchSuggestions } from '../components/SearchSuggestions'
 import { notFoundMeta } from '../catalogue/meta'
 import '../styles/catalogue.css'
 
@@ -16,15 +17,21 @@ export function meta() {
  */
 export function NotFound({ what = 'Сторінку' }: { what?: string }) {
   return (
-    <main className="catalogue">
+    <div className="catalogue">
       <h1 className="catalogue__heading">{what} не знайдено</h1>
       <p>
         Можливо, ви перейшли за застарілим посиланням, або цієї сторінки більше немає в каталозі.
       </p>
       <p>
-        <Link to="/">Повернутися до каталогу аудіокниг</Link>
+        <Link to="/books">Повернутися до каталогу аудіокниг</Link>
       </p>
-    </main>
+
+      {/*
+        A way to look for what was wanted is worth more here than a way back to
+        somewhere the visitor was never trying to go (FR-021).
+      */}
+      <SearchSuggestions />
+    </div>
   )
 }
 

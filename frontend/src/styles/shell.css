@@ -1,0 +1,422 @@
+/*
+ * The furniture every page carries: the banner, the footer, the trail between
+ * them, and the skip link that lets a keyboard past all of it.
+ *
+ * Reads from tokens.css and declares no value of its own.
+ *
+ * **The banner and the footer carry fully opaque fills, and that is
+ * load-bearing rather than aesthetic.** axe resolves what is behind a text node
+ * by walking the elements covering it and stopping at the first opaque one,
+ * treating a background-image as a stop it cannot read. The ground behind every
+ * page is decorated, so a region at 95% alpha looks identical on screen and
+ * lets that walk reach the texture, at which point every colour-contrast result
+ * on the page turns from pass to incomplete — and a suite that counts
+ * violations stays green while checking nothing.
+ */
+
+/* --- The skip link ------------------------------------------------------- */
+
+/*
+ * The first focusable element in the document, and invisible until it has
+ * focus. It is not display:none and not visibility:hidden: either would take it
+ * out of the tab ring entirely, which is the one thing it must never leave.
+ *
+ * Clipped rather than pushed off-screen with a negative offset, because a
+ * negative offset inside a scroll container scrolls the page sideways when the
+ * element takes focus.
+ */
+.skip-link {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skip-link:focus-visible,
+.skip-link:focus {
+  position: static;
+  display: inline-flex;
+  align-items: center;
+  width: auto;
+  height: auto;
+  min-height: var(--target-min);
+  padding: var(--space-2) var(--space-4);
+  overflow: visible;
+  clip-path: none;
+  color: var(--text);
+  background-color: var(--surface-raised);
+  border-radius: var(--radius-sm);
+}
+
+/* --- The banner ---------------------------------------------------------- */
+
+/*
+ * One row: the wordmark, the navigation, the search field pushed right, and the
+ * account control at the end.
+ *
+ * It was three rows, and the middle one was a search field with a sentence for
+ * a label. The bar was taller than the first paragraph of most pages it sat
+ * above, which is the wrong way round — the banner is how you leave a page, not
+ * what you came for.
+ */
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--space-5);
+  row-gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+
+  /* Opaque. See the note at the top of this file. */
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--border-structural);
+}
+
+/*
+ * The one piece of personality in the bar, and the only place the site says its
+ * own name out loud. It carries the display face and the tracking the ground
+ * watermark uses, so the banner and the texture behind it read as the same
+ * mark rather than as two logos that happen to share a name.
+ */
+.site-header__wordmark {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  color: var(--heading);
+  text-decoration: none;
+}
+
+/* --- The main navigation ------------------------------------------------- */
+
+.site-nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  padding-inline: var(--space-1);
+  color: var(--text);
+  text-decoration: none;
+}
+
+/*
+ * Underlined on focus as well as when current, because removing the underline
+ * from a link leaves colour as the only thing marking it, and colour alone is
+ * not a signal everyone receives.
+ */
+.site-nav a:hover,
+.site-nav a:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+/*
+ * Where the visitor already is, said with more than colour: the weight changes
+ * and an underline appears, so the current destination is distinguishable
+ * without seeing hue.
+ */
+.site-nav a[aria-current='page'] {
+  font-weight: 700;
+  color: var(--heading);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+/* --- The search field ---------------------------------------------------- */
+
+/*
+ * Pushed to the right of the navigation and bounded, rather than taking every
+ * pixel left over. margin-inline-start: auto is what separates the two groups
+ * without a divider to draw.
+ */
+.site-search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 0 1 32rem;
+  margin-inline-start: auto;
+  min-width: 0;
+}
+
+.site-search__controls {
+  display: flex;
+  flex: 1 1 auto;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.site-search__input {
+  font: inherit;
+  font-size: var(--text-base);
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: var(--target-min);
+  padding: var(--space-1) var(--space-3);
+  color: var(--text);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-sm);
+}
+
+/*
+ * The one filled control in the bar, and it is filled because it submits a
+ * form: --action names that and nothing else (FR-052). The account control
+ * beside it is a link, so it is outlined instead — which is what keeps "teal
+ * means this submits" true everywhere on the site.
+ */
+.site-search button {
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  flex: 0 0 auto;
+  min-height: var(--target-min);
+  padding: var(--space-1) var(--space-4);
+  color: var(--on-action);
+  background-color: var(--action);
+  border: 1px solid var(--action);
+  border-radius: var(--radius-sm);
+}
+
+/* --- The account control ------------------------------------------------- */
+
+/*
+ * Last in the banner, and holding one control rather than two.
+ *
+ * Signed out it offers a single way in: the sign-in page is where the choice
+ * between signing in and registering is made, and it already carries that link.
+ * Two links here made the visitor choose before the site had told them anything.
+ */
+.session-menu {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/*
+ * A reserved box, and the reason is FR-008 rather than tidiness. The session is
+ * read after the document loads, so this slot changes from empty to one of two
+ * shapes a moment after the page settles. A box that resizes would move the
+ * banner's own height and push every element on the page down under a visitor
+ * who has already started reading it; a fixed one cannot.
+ */
+.session-menu__slot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  min-width: 11rem;
+  min-height: var(--target-min);
+}
+
+/*
+ * Outlined rather than filled: see the note on the search button. It is still
+ * unmistakably a control, which is what it was not when it was a bare link.
+ */
+.session-menu a,
+.session-menu button {
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  padding: var(--space-1) var(--space-4);
+  color: var(--text);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/*
+ * Who is signed in, bounded so that a long address cannot change the size of
+ * the reserved box above. The full address stays in the accessibility tree, so
+ * clipping it costs a screen reader nothing.
+ */
+.session-menu__who {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  max-width: 7rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/*
+ * Below this the bar cannot hold four groups on one line, so the search takes a
+ * line of its own rather than squeezing the navigation off the end.
+ */
+@media (max-width: 60rem) {
+  /* No `order` here, deliberately: it would move the field visually without
+     moving it in the tab ring, so a keyboard user would travel the bar in a
+     different sequence from the one they can see. The source order already
+     wraps the way this wants.
+
+     Narrow enough to drop below the navigation, wide enough that the account
+     control still fits beside it. FR-006 rules out a disclosure control, so the
+     bar wraps rather than collapses, and every line it saves is real. */
+  .site-search {
+    flex: 1 1 14rem;
+    margin-inline-start: 0;
+  }
+
+  .session-menu__slot {
+    min-width: 6rem;
+  }
+}
+
+/*
+ * At phone widths the field takes a line of its own.
+ *
+ * Sharing one with the account control leaves it about eighty pixels wide,
+ * which is narrower than the word "Стратегія" and too small to read back what
+ * you typed. That costs a third line in the bar, and it is worth it: FR-006
+ * rules out hiding the navigation behind a disclosure, so the bar's job at this
+ * width is to wrap legibly rather than to stay short.
+ */
+@media (max-width: 30rem) {
+  .site-header {
+    column-gap: var(--space-3);
+  }
+
+  .site-nav ul {
+    gap: var(--space-1) var(--space-3);
+  }
+
+  .site-search {
+    flex-basis: 100%;
+  }
+
+  .session-menu {
+    margin-inline-start: auto;
+  }
+}
+
+/* --- The content between them -------------------------------------------- */
+
+/*
+ * Takes the slack in the body's column, which is what actually docks the footer
+ * to the bottom of a short page. Without it the column is the right height and
+ * nothing inside it grows, so the footer sits wherever the content ends and the
+ * ground shows below it.
+ */
+#main {
+  flex: 1 0 auto;
+}
+
+/* --- The trail ----------------------------------------------------------- */
+
+.breadcrumbs {
+  padding: var(--space-3) var(--space-4) 0;
+}
+
+.breadcrumbs__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  margin: 0;
+  padding: 0;
+  font-size: var(--text-sm);
+  list-style: none;
+}
+
+/*
+ * The trail's links are small text, so the hit area is grown with padding
+ * rather than left at the size of the words. Padding rather than a bare
+ * min-height, so the box grows with its content instead of the text sitting in
+ * the middle of a target that stops where the text does.
+ */
+.breadcrumbs__item a,
+.breadcrumbs__item [aria-current='page'] {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  padding-block: var(--space-2);
+}
+
+/*
+ * The separator is generated content rather than a character in the markup, so
+ * it is decoration a screen reader does not read out. A trail read as
+ * "Головна chevron Каталог chevron Книжка" is noise; the list structure already
+ * says these are steps.
+ */
+.breadcrumbs__item + .breadcrumbs__item::before {
+  content: '›';
+  margin-right: var(--space-2);
+  color: var(--text-muted);
+}
+
+.breadcrumbs__item [aria-current='page'] {
+  color: var(--text-muted);
+}
+
+.breadcrumbs__item a {
+  text-decoration: none;
+}
+
+.breadcrumbs__item a:hover,
+.breadcrumbs__item a:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+/* --- The footer ---------------------------------------------------------- */
+
+/*
+ * No margin above it: the body's column already puts it at the bottom, and a
+ * margin there would be a band of bare ground between the content and the
+ * footer on every short page.
+ */
+.site-footer {
+  padding: var(--space-6) var(--space-4);
+
+  /* Opaque, for the reason at the top of this file. */
+  background-color: var(--surface);
+  border-top: 1px solid var(--border-structural);
+}
+
+.site-footer__about {
+  max-width: var(--measure-prose);
+  margin: 0 0 var(--space-4);
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.site-footer__links ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-footer__links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  text-decoration: none;
+}
+
+.site-footer__links a:hover,
+.site-footer__links a:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}

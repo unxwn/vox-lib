@@ -1,5 +1,14 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { BOOK as REAL_BOOK, COMPILED_BOOK } from './pages'
+import {
+  clearSparseBooks,
+  DRAFT,
+  IN_ANOTHER_LANGUAGE,
+  seedSparseBooks,
+  WITHOUT_CHAPTERS,
+  WITHOUT_DESCRIPTION,
+} from './sparse-books-fixture'
 import { waitForHydration } from './support'
 
 /**
@@ -12,10 +21,28 @@ import { waitForHydration } from './support'
  * VoiceOver and TalkBack recorded in manual-verification.md.
  */
 
-/** Seeded in Ukrainian, with chapters, a description and multiple authors. */
-const BOOK = '/books/khiba-revut-voly'
+/** A real book: Ukrainian, with a description, a cover and one credit. */
+const BOOK = `/books/${REAL_BOOK}`
 
 test.describe('one book', () => {
+  /*
+    Serial, because the sparse cases below share seeded rows in the database the
+    dev server is reading. Under the default parallelism Playwright splits one
+    file across workers, each runs beforeAll and afterAll for itself, and one
+    worker's cleanup deletes the books another worker is still reading.
+  */
+  test.describe.configure({ mode: 'serial' })
+
+  // The sparse cases below need books the real catalogue does not contain, and
+  // they are seeded once for the file rather than per test.
+  test.beforeAll(async () => {
+    await seedSparseBooks()
+  })
+
+  test.afterAll(async () => {
+    await clearSparseBooks()
+  })
+
   test('has no critical or serious accessibility violations', async ({ page }) => {
     await page.goto(BOOK)
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
@@ -35,7 +62,7 @@ test.describe('one book', () => {
     await page.goto(BOOK)
 
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      'Хіба ревуть воли, як ясла повні?',
+      'Стратегія і тактика лідерства',
     )
 
     // A screen reader moves through a page by its headings, so the levels have
@@ -67,16 +94,18 @@ test.describe('one book', () => {
     const chapters = page.getByRole('list').filter({ has: page.locator('.chapters__item') })
 
     await expect(chapters).toBeVisible()
-    await expect(chapters.getByRole('listitem')).toHaveCount(4)
+    // One chapter today: FR-065 seeds each real book with the structure that is
+    // known, which is a single chapter carrying its whole running time. The real
+    // chapters arrive with the audio and replace it.
+    await expect(chapters.getByRole('listitem')).toHaveCount(1)
 
     // The count the page states and the number of items it renders are the same
     // fact, so a reader is never told four and shown three.
-    await expect(page.getByText('Розділів').locator('..')).toContainText('4')
+    await expect(page.getByText('Розділів').locator('..')).toContainText('1')
   })
 
   test('a book with no chapters says so instead of leaving an empty list', async ({ page }) => {
-    // Інтермеццо is seeded with no chapters on purpose.
-    await page.goto('/books/intermezzo')
+    await page.goto(`/books/${WITHOUT_CHAPTERS}`)
 
     await expect(page.locator('.chapters__empty')).toBeVisible()
     await expect(
@@ -85,18 +114,17 @@ test.describe('one book', () => {
   })
 
   test('a book with no description says so rather than showing a gap', async ({ page }) => {
-    // Єретик is seeded without a description on purpose.
-    await page.goto('/books/yeretyk')
+    await page.goto(`/books/${WITHOUT_DESCRIPTION}`)
 
     await expect(page.locator('.book__description--absent')).toBeVisible()
   })
 
   test('focus lands on the book when it is reached from the catalogue', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/books')
     await waitForHydration(page)
 
-    await page.getByRole('link', { name: /Ґудзик/ }).click()
-    await expect(page).toHaveURL(/\/books\/gudzyk$/)
+    await page.getByRole('link', { name: /Стратегія і тактика лідерства/ }).click()
+    await expect(page).toHaveURL(new RegExp(`/books/${REAL_BOOK}$`))
 
     // FR-019 applied to arriving at a book: without this the keyboard is left
     // on a link that no longer exists.
@@ -108,20 +136,31 @@ test.describe('one book', () => {
   }) => {
     await page.goto(BOOK)
 
-    await expect(page.getByText('Щоб слухати цю книжку, потрібен обліковий запис.')).toBeVisible()
+    const main = page.getByRole('main')
+
+    await expect(main.getByText('Щоб слухати цю книжку, потрібен обліковий запис.')).toBeVisible()
+
+    // FR-055: the message carries the way to get one. Naming what the visitor
+    // lacks without offering it is a dead end, and registration is one step
+    // away.
+    await expect(main.getByRole('link', { name: 'Створити обліковий запис' })).toHaveAttribute(
+      'href',
+      '/register',
+    )
 
     // FR-010. Not a disabled play button either: a disabled control still
     // appears in a screen reader's list of controls and invites a listener to
-    // hunt for a way to enable it.
+    // hunt for a way to enable it. Scoped to main, because the banner carries
+    // the search form's submit button on every page.
     await expect(page.locator('audio, video')).toHaveCount(0)
-    await expect(page.getByRole('button')).toHaveCount(0)
-    await expect(page.getByRole('slider')).toHaveCount(0)
+    await expect(main.getByRole('button')).toHaveCount(0)
+    await expect(main.getByRole('slider')).toHaveCount(0)
   })
 
   test('declares the book language on its own content, leaving the interface Ukrainian', async ({
     page,
   }) => {
-    await page.goto('/books/kobzar-selected-poems')
+    await page.goto(`/books/${IN_ANOTHER_LANGUAGE}`)
 
     // FR-018: the document stays Ukrainian because the furniture around the
     // book is, while the book's own words are marked as English so a screen
@@ -139,9 +178,20 @@ test.describe('one book', () => {
   })
 
   test('an unpublished book is not reachable at its own address', async ({ page }) => {
-    // Чорна рада is seeded as a draft, and must behave exactly as if absent.
-    await page.goto('/books/chorna-rada')
+    await page.goto(`/books/${DRAFT}`)
 
     await expect(page.getByRole('heading', { level: 1 })).toContainText('не знайдено')
+  })
+
+  test('a compiler is credited as one beside their name', async ({ page }) => {
+    await page.goto(`/books/${COMPILED_BOOK}`)
+
+    // FR-066, as visible text rather than only in the response: an author needs
+    // no label because it is what a reader assumes; a compiler does, because
+    // assuming it there would be wrong.
+    const credits = page.getByRole('main').locator('.book__authors')
+
+    await expect(credits).toContainText('упорядник')
+    await expect(credits.getByRole('link')).toHaveAttribute('href', /\/authors\//)
   })
 })

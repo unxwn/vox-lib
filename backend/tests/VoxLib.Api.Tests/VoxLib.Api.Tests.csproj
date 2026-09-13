@@ -26,4 +26,10 @@
     <ProjectReference Include="..\..\src\VoxLib.Api\VoxLib.Api.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Embedded for the reason the shipped seed is: the fixture finds it the
+         same way whatever the working directory happens to be. -->
+    <EmbeddedResource Include="Infrastructure\sample-catalogue.json" />
+  </ItemGroup>
+
 </Project>

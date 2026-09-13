@@ -8,8 +8,8 @@ namespace VoxLib.Api.Tests.Catalogue;
 /// Where the pages end. FR-020 draws the line: a page that does not exist is not
 /// found, and an empty catalogue still has a page one to put the empty state on.
 /// </summary>
-[Collection(CatalogueCollection.Name)]
-public class BookListPagingTests(CatalogueApiFixture fixture)
+[Collection(SampleCatalogueCollection.Name)]
+public class BookListPagingTests(SampleCatalogueApiFixture fixture)
 {
     private readonly HttpClient _client = fixture.CreateClient();
 
@@ -49,7 +49,7 @@ public class BookListPagingTests(CatalogueApiFixture fixture)
     [Fact]
     public async Task The_last_page_is_still_found()
     {
-        var response = await _client.GetAsync($"/api/books?page={SeededCatalogue.PageCount}");
+        var response = await _client.GetAsync($"/api/books?page={SampleCatalogue.PageCount}");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
@@ -67,13 +67,13 @@ public class BookListPagingTests(CatalogueApiFixture fixture)
 
         var titles = first
             .Items.Concat(second.Items)
-            .Where(book => book.Title == SeededCatalogue.TitleSharedByTwoBooks)
+            .Where(book => book.Title == SampleCatalogue.TitleSharedByTwoBooks)
             .Select(book => book.Slug)
             .ToList();
 
         Assert.Equal(2, titles.Count);
-        Assert.Equal(SeededCatalogue.LastSlugOnFirstPage, first.Items[^1].Slug);
-        Assert.Equal(SeededCatalogue.FirstSlugOnSecondPage, second.Items[0].Slug);
+        Assert.Equal(SampleCatalogue.LastSlugOnFirstPage, first.Items[^1].Slug);
+        Assert.Equal(SampleCatalogue.FirstSlugOnSecondPage, second.Items[0].Slug);
     }
 
     [Fact]
@@ -81,14 +81,14 @@ public class BookListPagingTests(CatalogueApiFixture fixture)
     {
         var slugs = new List<string>();
 
-        foreach (var pageNumber in Enumerable.Range(1, SeededCatalogue.PageCount))
+        foreach (var pageNumber in Enumerable.Range(1, SampleCatalogue.PageCount))
         {
             var page = await GetPageAsync($"/api/books?page={pageNumber}");
             slugs.AddRange(page.Items.Select(book => book.Slug));
         }
 
-        Assert.Equal(SeededCatalogue.PublishedCount, slugs.Count);
-        Assert.Equal(SeededCatalogue.PublishedCount, slugs.Distinct().Count());
+        Assert.Equal(SampleCatalogue.PublishedCount, slugs.Count);
+        Assert.Equal(SampleCatalogue.PublishedCount, slugs.Distinct().Count());
     }
 
     /// <summary>

@@ -8,8 +8,8 @@ namespace VoxLib.Api.Tests.Catalogue;
 /// What a book's own page is given to work with: its title, who wrote it, what
 /// it is about, how it is divided and how long that comes to. FR-008.
 /// </summary>
-[Collection(CatalogueCollection.Name)]
-public class BookDetailEndpointTests(CatalogueApiFixture fixture)
+[Collection(SampleCatalogueCollection.Name)]
+public class BookDetailEndpointTests(SampleCatalogueApiFixture fixture)
 {
     private readonly HttpClient _client = fixture.CreateClient();
 
@@ -20,7 +20,9 @@ public class BookDetailEndpointTests(CatalogueApiFixture fixture)
 
         Assert.Equal("khiba-revut-voly", book.Slug);
         Assert.Equal("Хіба ревуть воли, як ясла повні?", book.Title);
-        Assert.Equal(["Іван Білик", "Панас Мирний"], book.Authors);
+        Assert.Equal(
+            ["Іван Білик", "Панас Мирний"],
+            book.Authors.Select(author => author.Name));
         Assert.False(string.IsNullOrWhiteSpace(book.Description));
         Assert.Equal(4, book.ChapterCount);
     }
@@ -49,12 +51,41 @@ public class BookDetailEndpointTests(CatalogueApiFixture fixture)
         Assert.Equal(3900 + 4080 + 3720 + 3540, book.TotalRunningTimeSeconds);
     }
 
+    /// <summary>
+    /// The cover is a set of prepared widths rather than one URL, composed from
+    /// configuration rather than stored. The widths are what a browser picks
+    /// between; nothing is resized on request (FR-045).
+    /// </summary>
     [Fact]
-    public async Task A_book_with_cover_art_carries_its_address()
+    public async Task A_book_with_cover_art_carries_every_prepared_width()
     {
-        var book = await GetAsync("boiarynia");
+        var book = await GetAsync(SampleCatalogue.SlugWithCoverArt);
 
-        Assert.False(string.IsNullOrWhiteSpace(book.CoverArtUrl));
+        Assert.NotNull(book.Cover);
+        Assert.Equal([160, 320], book.Cover.Sources.Select(source => source.Width));
+
+        Assert.All(book.Cover.Sources, source =>
+        {
+            // Absolute and public: object storage serves these, not this API,
+            // so a relative path would resolve against the wrong origin.
+            Assert.True(
+                Uri.TryCreate(source.Url, UriKind.Absolute, out _),
+                $"'{source.Url}' is not an absolute address.");
+            Assert.Contains(SampleCatalogue.SlugWithCoverArt, source.Url, StringComparison.Ordinal);
+            Assert.EndsWith(".webp", source.Url, StringComparison.Ordinal);
+        });
+    }
+
+    /// <summary>
+    /// A book with no cover carries none at all rather than an empty set, which
+    /// is what lets the interface tell "no cover" from "a cover with no widths".
+    /// </summary>
+    [Fact]
+    public async Task A_book_without_cover_art_carries_no_cover_at_all()
+    {
+        var book = await GetAsync(SampleCatalogue.SlugWithoutCoverArt);
+
+        Assert.Null(book.Cover);
     }
 
     /// <summary>
@@ -84,7 +115,9 @@ public class BookDetailEndpointTests(CatalogueApiFixture fixture)
         var summary = listing.Items.Single(book => book.Slug == "haidamaky");
 
         Assert.Equal(summary.Title, detail.Title);
-        Assert.Equal(summary.Authors, detail.Authors);
+        Assert.Equal(
+            summary.Authors.Select(author => author.Slug),
+            detail.Authors.Select(author => author.Slug));
         Assert.Equal(summary.ChapterCount, detail.ChapterCount);
         Assert.Equal(summary.TotalRunningTimeSeconds, detail.TotalRunningTimeSeconds);
     }

@@ -81,6 +81,20 @@
 
 body {
   margin: 0;
+
+  /*
+   * A column the full height of the viewport, so the footer sits at the bottom
+   * of a short page instead of floating a little above it with the ground
+   * showing through underneath. #main takes the slack; see shell.css.
+   *
+   * dvh rather than vh: on a mobile browser vh is the height with the address
+   * bar hidden, so a 100vh column is taller than the screen and leaves the page
+   * scrollable by exactly the height of the bar.
+   */
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+
   font-family: var(--font-text);
   font-size: var(--text-base);
   color: var(--text);
@@ -111,8 +125,39 @@ h6 {
   letter-spacing: 0;
 }
 
+/*
+ * Underlined by default, and that default is kept rather than removed.
+ *
+ * WCAG 1.4.1 is about links inside a block of text: there, colour alone is the
+ * only thing marking them, and colour alone is not a signal everyone receives.
+ * So prose keeps its underlines.
+ *
+ * A link that stands alone is a different case. A navigation item, an entry in
+ * a list of books, a step in the trail, a footer link -- these are marked as
+ * links by where they are and what surrounds them, and underlining every one
+ * turns a page into a wall of ruled text. Those opt out below, one component at
+ * a time, and each one brings the underline back on hover and focus so the
+ * affordance is still discoverable by anyone looking for it.
+ */
 a {
   color: var(--link);
+}
+
+/*
+ * Present in the accessibility tree, absent from the page. Clipped rather than
+ * pushed off-screen with a negative offset, because a negative offset inside a
+ * scroll container scrolls the page sideways when the element takes focus.
+ */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* --- Focus --------------------------------------------------------------- */
@@ -145,27 +190,15 @@ a {
   }
 }
 
-/* --- The session menu ---------------------------------------------------- */
+/* --- The account slot ---------------------------------------------------- */
 
 /*
- * Lives here, not in account.css, because root.tsx renders it on every route
- * while account.css is imported only by the five account screens. Declared over
- * there, it had no layout at all on the catalogue, book, search and not-found
- * pages, and its links had no focus indicator on any of them.
+ * The slot's own layout moved to shell.css when it became part of the banner
+ * rather than a bar of its own. What stays here is the size of the things
+ * inside it: they are on every page, so they are among the most-used targets on
+ * the site, and they had no layout at all outside the account screens until
+ * this block moved out of account.css.
  */
-.session-menu {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  align-items: center;
-  padding: var(--space-3) var(--space-4);
-  background-color: var(--surface);
-  border-bottom: 1px solid var(--border-structural);
-}
-
-/* The menu is on every page, so its links are among the most-used targets on
-   the site. They had no layout at all outside the account screens until this
-   block moved here. */
 .session-menu a {
   display: inline-flex;
   align-items: center;

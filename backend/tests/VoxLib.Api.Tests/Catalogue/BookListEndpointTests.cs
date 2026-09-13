@@ -8,8 +8,8 @@ namespace VoxLib.Api.Tests.Catalogue;
 /// The listing itself: what order the books come in, how many arrive at a time,
 /// and whether a visitor can tell where they are. FR-001, FR-004, FR-005, FR-015.
 /// </summary>
-[Collection(CatalogueCollection.Name)]
-public class BookListEndpointTests(CatalogueApiFixture fixture)
+[Collection(SampleCatalogueCollection.Name)]
+public class BookListEndpointTests(SampleCatalogueApiFixture fixture)
 {
     private readonly HttpClient _client = fixture.CreateClient();
 
@@ -18,11 +18,11 @@ public class BookListEndpointTests(CatalogueApiFixture fixture)
     {
         var page = await GetPageAsync("/api/books");
 
-        Assert.Equal(SeededCatalogue.PageSize, page.Items.Count);
+        Assert.Equal(SampleCatalogue.PageSize, page.Items.Count);
         Assert.Equal(1, page.Page);
-        Assert.Equal(SeededCatalogue.PageSize, page.PageSize);
-        Assert.Equal(SeededCatalogue.PublishedCount, page.TotalCount);
-        Assert.Equal(SeededCatalogue.PageCount, page.PageCount);
+        Assert.Equal(SampleCatalogue.PageSize, page.PageSize);
+        Assert.Equal(SampleCatalogue.PublishedCount, page.TotalCount);
+        Assert.Equal(SampleCatalogue.PageCount, page.PageCount);
     }
 
     [Fact]
@@ -30,9 +30,9 @@ public class BookListEndpointTests(CatalogueApiFixture fixture)
     {
         var page = await GetPageAsync("/api/books?page=2");
 
-        Assert.Equal(SeededCatalogue.PublishedCount - SeededCatalogue.PageSize, page.Items.Count);
+        Assert.Equal(SampleCatalogue.PublishedCount - SampleCatalogue.PageSize, page.Items.Count);
         Assert.Equal(2, page.Page);
-        Assert.Equal(SeededCatalogue.PublishedCount, page.TotalCount);
+        Assert.Equal(SampleCatalogue.PublishedCount, page.TotalCount);
     }
 
     [Fact]
@@ -40,7 +40,7 @@ public class BookListEndpointTests(CatalogueApiFixture fixture)
     {
         var slugs = await EveryPublishedSlugAsync();
 
-        Assert.Equal(SeededCatalogue.SlugsInOrder, slugs);
+        Assert.Equal(SampleCatalogue.SlugsInOrder, slugs);
     }
 
     /// <summary>
@@ -69,22 +69,22 @@ public class BookListEndpointTests(CatalogueApiFixture fixture)
     {
         var slugs = await EveryPublishedSlugAsync();
 
-        Assert.DoesNotContain(SeededCatalogue.DraftSlug, slugs);
+        Assert.DoesNotContain(SampleCatalogue.DraftSlug, slugs);
     }
 
     [Fact]
     public async Task A_book_without_cover_art_is_listed_with_none_rather_than_omitted()
     {
-        var book = await FindAsync(SeededCatalogue.SlugWithoutCoverArt);
+        var book = await FindAsync(SampleCatalogue.SlugWithoutCoverArt);
 
-        Assert.Null(book.CoverArtUrl);
+        Assert.Null(book.Cover);
         Assert.NotEmpty(book.Title);
     }
 
     [Fact]
     public async Task A_book_without_chapters_runs_for_no_time_rather_than_reporting_nothing()
     {
-        var book = await FindAsync(SeededCatalogue.SlugWithoutChapters);
+        var book = await FindAsync(SampleCatalogue.SlugWithoutChapters);
 
         Assert.Equal(0, book.ChapterCount);
         Assert.Equal(0, book.TotalRunningTimeSeconds);
@@ -95,14 +95,16 @@ public class BookListEndpointTests(CatalogueApiFixture fixture)
     {
         var book = await FindAsync("khiba-revut-voly");
 
-        Assert.Equal(["Іван Білик", "Панас Мирний"], book.Authors);
+        Assert.Equal(
+            ["Іван Білик", "Панас Мирний"],
+            book.Authors.Select(author => author.Name));
         Assert.Equal(4, book.ChapterCount);
         Assert.Equal(3900 + 4080 + 3720 + 3540, book.TotalRunningTimeSeconds);
     }
 
     private async Task<BookSummaryResponse> FindAsync(string slug)
     {
-        foreach (var pageNumber in Enumerable.Range(1, SeededCatalogue.PageCount))
+        foreach (var pageNumber in Enumerable.Range(1, SampleCatalogue.PageCount))
         {
             var page = await GetPageAsync($"/api/books?page={pageNumber}");
             var match = page.Items.FirstOrDefault(book => book.Slug == slug);
@@ -120,7 +122,7 @@ public class BookListEndpointTests(CatalogueApiFixture fixture)
     {
         var slugs = new List<string>();
 
-        foreach (var pageNumber in Enumerable.Range(1, SeededCatalogue.PageCount))
+        foreach (var pageNumber in Enumerable.Range(1, SampleCatalogue.PageCount))
         {
             var page = await GetPageAsync($"/api/books?page={pageNumber}");
             slugs.AddRange(page.Items.Select(book => book.Slug));

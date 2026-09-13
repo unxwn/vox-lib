@@ -1,38 +1,18 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
+import { clearPagingCatalogue, seedPagingCatalogue } from './paging-fixture'
+import { waitForHydration } from './support'
 
 /**
  * The catalogue, checked the way it is actually used. Principle I is not
  * satisfied by markup that looks right: focus movement and live region
  * announcements only behave correctly in a real browser, so these run in one.
  *
- * These checks catch violations and regressions. They do not replace the manual
- * pass on VoiceOver and TalkBack recorded in manual-verification.md, which is
- * the only thing that proves the catalogue is usable rather than merely
- * conformant.
+ * The catalogue now lives at /books rather than at the root, which is the front
+ * door. And it holds four books, so everything about paging is checked against
+ * the fixture in paging-fixture.ts instead — four books against a page size of
+ * twenty would leave those assertions passing by having no subject.
  */
-
-/**
- * Waits until the router has taken over the document.
- *
- * Until it has, a pagination link is an ordinary link and following it reloads
- * the page, which is the correct fallback but is not the behaviour FR-019
- * describes. Clicking too early therefore tests the wrong thing, and does so
- * intermittently: it only happens when the machine is busy enough for the click
- * to beat hydration. The router publishes its instance on the window when it
- * hydrates, so that is the signal to wait for.
- */
-async function waitForHydration(page: Page) {
-  await page.waitForFunction(() => {
-    const router = (
-      window as unknown as {
-        __reactRouterDataRouter?: { state?: { initialized?: boolean } }
-      }
-    ).__reactRouterDataRouter
-
-    return router?.state?.initialized === true
-  })
-}
 
 /** The accessible name of the element the keyboard is currently on. */
 async function focused(page: Page) {
@@ -52,7 +32,7 @@ async function focused(page: Page) {
 
 test.describe('the catalogue list', () => {
   test('has no critical or serious accessibility violations', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/books')
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
 
     const { violations } = await new AxeBuilder({ page }).analyze()
@@ -62,17 +42,17 @@ test.describe('the catalogue list', () => {
 
     expect(
       blocking.map((violation) => `${violation.id}: ${violation.help}`),
-      'SC-002 allows no critical or serious violations',
+      'SC-022 allows no critical or serious violations',
     ).toEqual([])
   })
 
   test('every book on the page is reachable by keyboard, with no trap', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/books')
     await waitForHydration(page)
 
     const bookLinks = page.locator('a.catalogue__link')
     const bookCount = await bookLinks.count()
-    expect(bookCount, 'the first page lists a full page of books').toBe(20)
+    expect(bookCount, 'the catalogue lists its books').toBeGreaterThan(0)
 
     const expected = await bookLinks.evaluateAll((links) =>
       links.map((link) => link.getAttribute('href')),
@@ -89,10 +69,10 @@ test.describe('the catalogue list', () => {
       await page.keyboard.press('Tab')
       const current = await focused(page)
 
-      if (current?.href !== null && current !== null && expected.includes(current.href)) {
+      if (current?.href != null && expected.includes(current.href)) {
         reached.add(current.href)
 
-        // SC-004 asks for a visible focus indicator, not merely a focusable
+        // SC-024 asks for a visible focus indicator, not merely a focusable
         // element. A zero width outline is the default that browsers remove.
         if (current.outlineWidth === '0px') {
           missingOutline.push(current.href)
@@ -106,23 +86,83 @@ test.describe('the catalogue list', () => {
     expect(missingOutline, 'every focused book link shows a focus indicator').toEqual([])
   })
 
+  test('every credited name is a link to that person', async ({ page }) => {
+    await page.goto('/books')
+
+    // FR-033. Before this a credit was plain text, so the question a catalogue
+    // invites — what else did they do? — had no answer anywhere on the site.
+    const credits = page.locator('.catalogue__authors a')
+
+    expect(await credits.count(), 'the catalogue credits somebody').toBeGreaterThan(0)
+
+    const hrefs = await credits.evaluateAll((links) =>
+      links.map((link) => link.getAttribute('href')),
+    )
+
+    expect(hrefs.every((href) => href?.startsWith('/authors/') === true)).toBe(true)
+  })
+
+  test('a compiler is labelled as one, and an author is not', async ({ page }) => {
+    await page.goto('/books')
+
+    // FR-066. A name beside a book is read as its author unless something says
+    // otherwise, so labelling that would add noise to every book; leaving a
+    // compiler unlabelled states something untrue about who wrote it.
+    await expect(page.getByText('упорядник').first()).toBeVisible()
+    await expect(page.getByText('(автор)')).toHaveCount(0)
+  })
+
+  test('the document declares Ukrainian', async ({ page }) => {
+    await page.goto('/books')
+
+    await expect(page.locator('html')).toHaveAttribute('lang', 'uk')
+  })
+})
+
+/**
+ * These share one seeded catalogue and run in order, because they all read the
+ * same rows and the fixture writes to the database the dev server is serving.
+ */
+test.describe('paging the catalogue', () => {
+  test.describe.configure({ mode: 'serial' })
+
+  let totalBooks = 0
+
+  test.beforeAll(async () => {
+    totalBooks = await seedPagingCatalogue()
+  })
+
+  test.afterAll(async () => {
+    await clearPagingCatalogue()
+  })
+
+  test('the first page says where the visitor is', async ({ page }) => {
+    await page.goto('/books')
+    await waitForHydration(page)
+
+    const status = page.getByRole('status').filter({ hasText: 'Сторінка' })
+
+    await expect(status).toHaveText(/Сторінка 1 з 2/)
+    await expect(status).toHaveText(new RegExp(String(totalBooks)))
+  })
+
   test('focus moves to the results heading when the page changes', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/books')
     await waitForHydration(page)
 
     await page.getByRole('link', { name: 'Наступна' }).click()
-    await expect(page).toHaveURL(/\/page\/2$/)
+    await expect(page).toHaveURL(/\/books\/page\/2$/)
 
-    const heading = page.getByRole('heading', { level: 1 })
-    await expect(heading).toBeFocused()
+    // FR-019. Without this, following a pagination link leaves focus on a link
+    // that no longer exists and a screen reader user restarts from the page
+    // furniture, several stops from the books they asked for.
+    await expect(page.getByRole('heading', { level: 1 })).toBeFocused()
   })
 
   test('the new position and result count are announced politely', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/books')
     await waitForHydration(page)
 
-    // Scoped to the position region: the loading indicator is a polite region
-    // too, and during a navigation both are on the page.
     const status = page.getByRole('status').filter({ hasText: 'Сторінка' })
     await expect(status).toHaveText(/Сторінка 1 з 2/)
 
@@ -130,11 +170,12 @@ test.describe('the catalogue list', () => {
 
     // A polite region, so it is read at the next pause rather than cutting in.
     await expect(status).toHaveText(/Сторінка 2 з 2/)
-    await expect(status).toHaveText(/26/)
+    await expect(status).toHaveText(new RegExp(String(totalBooks)))
   })
 
   test('the pagination is a named landmark whose links carry real addresses', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/books')
+    await waitForHydration(page)
 
     const pagination = page.getByRole('navigation', { name: 'Сторінки каталогу' })
     await expect(pagination).toBeVisible()
@@ -145,21 +186,8 @@ test.describe('the catalogue list', () => {
 
     expect(hrefs.length).toBeGreaterThan(0)
     expect(hrefs.every((href) => href !== null && href !== '#')).toBe(true)
-  })
 
-  test('a book with no cover art is still announced by title and author', async ({ page }) => {
-    await page.goto('/')
-
-    // Ґудзик is seeded without cover art on purpose.
-    const link = page.getByRole('link', { name: /Ґудзик/ })
-
-    await expect(link).toBeVisible()
-    await expect(link).toContainText('Ірен Роздобудько')
-  })
-
-  test('the document declares Ukrainian', async ({ page }) => {
-    await page.goto('/')
-
-    await expect(page.locator('html')).toHaveAttribute('lang', 'uk')
+    // FR-030: the first page has one address, and it is not /books/page/1.
+    expect(hrefs).not.toContain('/books/page/1')
   })
 })

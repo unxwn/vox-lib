@@ -22,23 +22,6 @@ namespace VoxLib.Dal.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("AuthorDaoBookDao", b =>
-                {
-                    b.Property<Guid>("AuthorsId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("author_id");
-
-                    b.Property<Guid>("BooksId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("book_id");
-
-                    b.HasKey("AuthorsId", "BooksId");
-
-                    b.HasIndex("BooksId");
-
-                    b.ToTable("book_authors", (string)null);
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey", b =>
                 {
                     b.Property<int>("Id")
@@ -266,12 +249,57 @@ namespace VoxLib.Dal.Persistence.Migrations
                         .HasColumnName("name")
                         .UseCollation("uk-UA-x-icu");
 
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("slug");
+
+                    b.Property<string>("SortName")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("sort_name")
+                        .UseCollation("uk-UA-x-icu");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
                         .HasDatabaseName("ix_authors_name");
 
+                    b.HasIndex("Slug")
+                        .IsUnique()
+                        .HasDatabaseName("ix_authors_slug");
+
+                    b.HasIndex("SortName", "Slug")
+                        .HasDatabaseName("ix_authors_sort_name_slug");
+
                     b.ToTable("authors", (string)null);
+                });
+
+            modelBuilder.Entity("VoxLib.Dal.Book.BookAuthorDao", b =>
+                {
+                    b.Property<Guid>("BookId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("book_id");
+
+                    b.Property<Guid>("AuthorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("author_id");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasDefaultValue("Author")
+                        .HasColumnName("role");
+
+                    b.HasKey("BookId", "AuthorId");
+
+                    b.HasIndex("AuthorId");
+
+                    b.ToTable("book_authors", (string)null);
                 });
 
             modelBuilder.Entity("VoxLib.Dal.Book.BookDao", b =>
@@ -281,10 +309,14 @@ namespace VoxLib.Dal.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<string>("CoverArtUrl")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)")
-                        .HasColumnName("cover_art_url");
+                    b.Property<DateTimeOffset>("AddedToCatalogue")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("added_to_catalogue_at");
+
+                    b.Property<string>("CoverKey")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("cover_key");
 
                     b.Property<string>("Description")
                         .HasColumnType("text")
@@ -295,6 +327,12 @@ namespace VoxLib.Dal.Persistence.Migrations
                         .HasMaxLength(35)
                         .HasColumnType("character varying(35)")
                         .HasColumnName("language");
+
+                    b.Property<string>("Narrator")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("narrator")
+                        .UseCollation("uk-UA-x-icu");
 
                     b.Property<string>("PublicationState")
                         .IsRequired()
@@ -361,21 +399,6 @@ namespace VoxLib.Dal.Persistence.Migrations
                     b.ToTable("chapters", (string)null);
                 });
 
-            modelBuilder.Entity("AuthorDaoBookDao", b =>
-                {
-                    b.HasOne("VoxLib.Dal.Book.AuthorDao", null)
-                        .WithMany()
-                        .HasForeignKey("AuthorsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("VoxLib.Dal.Book.BookDao", null)
-                        .WithMany()
-                        .HasForeignKey("BooksId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
                 {
                     b.HasOne("VoxLib.Dal.Account.AccountDao", null)
@@ -403,6 +426,25 @@ namespace VoxLib.Dal.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("VoxLib.Dal.Book.BookAuthorDao", b =>
+                {
+                    b.HasOne("VoxLib.Dal.Book.AuthorDao", "Author")
+                        .WithMany("Credits")
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("VoxLib.Dal.Book.BookDao", "Book")
+                        .WithMany("Credits")
+                        .HasForeignKey("BookId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+
+                    b.Navigation("Book");
+                });
+
             modelBuilder.Entity("VoxLib.Dal.Book.ChapterDao", b =>
                 {
                     b.HasOne("VoxLib.Dal.Book.BookDao", "Book")
@@ -414,9 +456,16 @@ namespace VoxLib.Dal.Persistence.Migrations
                     b.Navigation("Book");
                 });
 
+            modelBuilder.Entity("VoxLib.Dal.Book.AuthorDao", b =>
+                {
+                    b.Navigation("Credits");
+                });
+
             modelBuilder.Entity("VoxLib.Dal.Book.BookDao", b =>
                 {
                     b.Navigation("Chapters");
+
+                    b.Navigation("Credits");
                 });
 #pragma warning restore 612, 618
         }

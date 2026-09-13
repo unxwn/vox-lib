@@ -35,6 +35,12 @@ public abstract class ApiFixture : IAsyncLifetime
 
     public HttpClient CreateClient() => Factory.CreateClient();
 
+    /// <summary>
+    /// The running application's services, for the few assertions that are about
+    /// what is stored rather than about what is served.
+    /// </summary>
+    public IServiceProvider Services => Factory.Services;
+
     protected WebApplicationFactory<Program> Factory =>
         _factory ?? throw new InvalidOperationException("The fixture has not started.");
 
