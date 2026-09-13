@@ -16,8 +16,8 @@
     <PackageReference Include="AWSSDK.S3" Version="4.0.103.2" />
     <!-- Options and logging only. This project speaks to the outside world; it
          does not know what an endpoint or a database is. -->
-    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.2" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.12" />
   </ItemGroup>
 
   <ItemGroup>
