@@ -13,8 +13,8 @@
     "lint:cs": "dotnet format backend/VoxLib.slnx --verify-no-changes"
   },
   "devDependencies": {
-    "concurrently": "^10.0.5",
-    "prettier": "^3.9.6"
+    "concurrently": "^10.0.6",
+    "prettier": "^3.9.10"
   },
   "packageManager": "pnpm@11.25.0"
 }
