@@ -9,7 +9,7 @@
   <ItemGroup>
     <!-- System.Net.Mail.SmtpClient has been obsolete since .NET 5 and Microsoft's
          own documentation points at MailKit by name. -->
-    <PackageReference Include="MailKit" Version="4.17.0" />
+    <PackageReference Include="MailKit" Version="5.0.0" />
     <!-- The S3 SDK rather than the MinIO client: it is what Cloudflare's own R2
          documentation targets, so R2 is the production case and MinIO the
          stand-in, not the other way round. -->
