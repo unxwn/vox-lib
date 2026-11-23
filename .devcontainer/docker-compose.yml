@@ -6,6 +6,10 @@
 # Nothing in CI builds this file (see CLAUDE.md), so a green pull request does
 # not verify it. Rebuild the container locally before merging a change here.
 
+# Without this the project is named after the folder (vox-lib_devcontainer),
+# and that name prefixes every container Compose creates.
+name: vox-lib
+
 services:
   app:
     build:
@@ -124,13 +128,12 @@ services:
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
 
 volumes:
-  # These four predate Compose: they were the "mounts" array in
-  # devcontainer.json, so Docker created them under their plain names. Compose
-  # otherwise prefixes every volume with the project name
-  # (vox-lib_devcontainer_...), which silently mounts a *different*, empty
-  # volume and looks like the data was lost. "name" pins the real name so the
-  # existing volumes keep being used; unlike "external: true" it still lets
-  # Compose create them on a machine that has none.
+  # Every volume carries an explicit name, so the data a container mounts never
+  # depends on the project name. Compose would otherwise prefix each one with
+  # it, and any change to that name (renaming the project, or the folder while
+  # the project was unnamed) silently mounts a *different*, empty volume that
+  # looks like lost data. Unlike "external: true", "name" still lets Compose
+  # create a volume on a machine that has none.
   vox-lib-claude:
     name: vox-lib-claude
   vox-lib-gh:
@@ -139,7 +142,7 @@ volumes:
     name: vox-lib-bash-history
   vox-lib-nuget:
     name: vox-lib-nuget
-  # Not pinned: these two were born under Compose, so their prefixed names are
-  # the ones holding the current data.
   vox-lib-pgdata:
+    name: vox-lib-pgdata
   vox-lib-storage:
+    name: vox-lib-storage
