@@ -73,7 +73,8 @@ services:
   # was verified rather than assumed: the API was run against both with nothing
   # changed but the Covers__ environment variables.
   storage:
-    image: chrislusf/seaweedfs
+    # Pinned: an unpinned tag can change under any rebuild without notice.
+    image: chrislusf/seaweedfs:4.46
     restart: unless-stopped
     # Same network namespace as app and db, for the reason mailpit is: every
     # service here shares one stack, so the API reaches S3 at localhost:9000 and
@@ -93,7 +94,9 @@ services:
       - vox-lib-storage:/data
       - ./seaweedfs-s3.json:/etc/seaweedfs/s3.json:ro
     healthcheck:
-      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1:9333/cluster/status']
+      # The filer rather than the master: it starts last, and storage-setup
+      # needs it. Checking the master let setup run before the filer existed.
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1:8888/']
       interval: 5s
       timeout: 5s
       retries: 20
@@ -104,17 +107,19 @@ services:
   # carry a development-only branch. In production Cloudflare creates it once, by
   # hand. Re-running this is harmless: it recreates nothing and deletes nothing.
   storage-setup:
-    image: chrislusf/seaweedfs
+    image: chrislusf/seaweedfs:4.46
     network_mode: service:db
     depends_on:
       storage:
         condition: service_healthy
+    # The filer is named explicitly; left to discovery through the master, the
+    # shell fails with "dial tcp: missing address".
     entrypoint: >
       /bin/sh -c "echo 's3.bucket.create -name vox-lib-covers'
-      | weed shell -master=localhost:9333"
+      | weed shell -master=localhost:9333 -filer=localhost:8888"
 
   mailpit:
-    image: axllent/mailpit
+    image: axllent/mailpit:v1.31.1
     restart: unless-stopped
     # Same network namespace as app and db, so the API reaches SMTP at
     # localhost:1025 and a browser reaches the mailbox at localhost:8025.
