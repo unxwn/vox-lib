@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { useNavigate, useNavigation } from 'react-router'
+import { useLocation, useNavigate, useNavigation } from 'react-router'
 import type { PagedBooks } from '../api/catalogue'
 import { catalogueMeta } from '../catalogue/meta'
 import { loadCataloguePage, type CatalogueState } from '../catalogue/page'
@@ -23,21 +23,28 @@ export default function CatalogueRoute({ loaderData }: { loaderData: CatalogueSt
 }
 
 /**
- * Whether the catalogue has been on screen once already in this session.
+ * The history entry the catalogue was last shown for, or null before it has
+ * been shown in this session.
  *
  * It lives outside the component on purpose. Page one and the later pages are
  * separate route modules, so moving between them unmounts one and mounts the
  * other, and anything held in a ref is born fresh each time. A per-component
  * "is this the first render" flag would therefore be true on every page change
  * and focus would never move.
+ *
+ * It is an entry rather than a boolean because the effect below can run more
+ * than once for one arrival (React 19.3 was seen to run it twice while
+ * hydrating the dev server's page). A boolean counted the second run as a page
+ * change and took focus on arrival; the same entry seen twice is recognisably
+ * not one.
  */
-let catalogueHasBeenShown = false
+let catalogueShownFor: string | null = null
 
 export function Catalogue({ state }: { state: CatalogueState }) {
   const navigation = useNavigation()
   const navigate = useNavigate()
+  const location = useLocation()
   const headingRef = useRef<HTMLHeadingElement>(null)
-  const currentPage = state.status === 'ok' ? state.page.page : null
 
   // FR-019. Without this, following a pagination link leaves focus on the link
   // that no longer exists and a screen reader user restarts from the page
@@ -45,13 +52,15 @@ export function Catalogue({ state }: { state: CatalogueState }) {
   // fresh is excluded: nothing has moved yet, and taking focus on arrival would
   // be its own defect.
   useEffect(() => {
-    if (!catalogueHasBeenShown) {
-      catalogueHasBeenShown = true
+    const previous = catalogueShownFor
+    catalogueShownFor = location.key
+
+    if (previous === null || previous === location.key) {
       return
     }
 
     headingRef.current?.focus()
-  }, [currentPage])
+  }, [location.key])
 
   const isLoading = navigation.state === 'loading'
 
